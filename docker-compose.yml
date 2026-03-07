@@ -1,0 +1,31 @@
+# Crystal Vision Co. — Production Docker Compose
+#
+# Static files are served directly by nginx on the host (not this container).
+# This compose file runs ONLY the Express API container.
+#
+# Host port 3003 → container port 3000
+# nginx proxies https://rightnowsd.org/api/ → 127.0.0.1:3003
+
+services:
+  crystalvision-api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    image: crystalvision-api:latest
+    container_name: crystalvision-api
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3003:3000"
+    env_file:
+      - ./api/.env
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    volumes:
+      # Persist SQLite DB and content.json across container rebuilds
+      - /opt/crystalvision/data:/app/data
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"

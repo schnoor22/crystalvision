@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- SEO -->
+    <title>Crystal Vision Co. &mdash; Professional Window Cleaning</title>
+    <meta name="description" content="Let the sunshine back in. Crystal Vision Co. offers professional residential and commercial window cleaning, plus expert window screen repair. Request your free quote today." />
+
+    <!-- OG Tags -->
+    <meta property="og:title" content="Crystal Vision Co. &mdash; Professional Window Cleaning" />
+    <meta property="og:description" content="Let the sunshine back in. Professional window cleaning &amp; screen repair." />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/og-image.jpg" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/logo.png" />
+
+    <!-- Preload critical assets -->
+    <link rel="preload" href="/hero-clean.jpg" as="image" />
+  </head>
+  <body class="no-scroll">
+
+    <!-- SQUEEGEE ANIMATION OVERLAY -->
+    <div id="animation-overlay">
+      <canvas id="squeegee-canvas"></canvas>
+      <button id="skip-btn" aria-label="Skip animation">
+        Skip Intro <i class="ph ph-fast-forward"></i>
+      </button>
+    </div>
+
+    <!-- NAVIGATION -->
+    <header class="site-nav" id="site-nav">
+      <div class="max-w-7xl mx-auto px-5 sm:px-8 flex items-center justify-between">
+        <a href="#" class="flex items-center gap-3 group">
+          <img src="/logo.png" alt="Crystal Vision Co." class="h-11 w-11 rounded-full shadow-md group-hover:shadow-lg transition-shadow" />
+          <span class="font-[var(--font-heading)] text-base font-bold text-white tracking-tight hidden sm:block">
+            Crystal Vision Co.
+          </span>
+        </a>
+
+        <nav class="hidden md:flex items-center gap-7">
+          <a href="#hero" class="nav-link">Home</a>
+          <a href="#about" class="nav-link">About</a>
+          <a href="#services" class="nav-link">Services</a>
+          <button data-modal="quote" class="nav-cta">
+            <i class="ph-bold ph-chat-circle-dots" style="font-size: 1rem;"></i>
+            Get a Quote
+          </button>
+        </nav>
+
+        <button id="hamburger-btn" class="hamburger md:hidden" aria-label="Open menu">
+          <i class="ph-bold ph-list"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Mobile Backdrop -->
+    <div id="mobile-backdrop" class="mobile-backdrop"></div>
+
+    <!-- Mobile Drawer -->
+    <nav id="mobile-drawer" class="mobile-drawer md:hidden">
+      <div class="flex items-center justify-between mb-10">
+        <span class="font-[var(--font-heading)] text-white font-bold text-sm tracking-tight">Crystal Vision Co.</span>
+        <button id="drawer-close" class="hamburger" aria-label="Close menu">
+          <i class="ph-bold ph-x"></i>
+        </button>
+      </div>
+      <div class="flex flex-col gap-1">
+        <a href="#hero" class="mobile-link text-white/80 hover:text-white text-lg font-medium py-2 transition">Home</a>
+        <a href="#about" class="mobile-link text-white/80 hover:text-white text-lg font-medium py-2 transition">About</a>
+        <a href="#services" class="mobile-link text-white/80 hover:text-white text-lg font-medium py-2 transition">Services</a>
+      </div>
+      <button data-modal="quote" class="nav-cta mt-auto justify-center text-base py-3">
+        <i class="ph-bold ph-chat-circle-dots" style="font-size: 1.125rem;"></i>
+        Get a Quote
+      </button>
+    </nav>
+
+    <!-- HERO SECTION -->
+    <section id="hero" class="hero">
+      <div class="hero-bg" style="background-image: url('/hero-clean.jpg');"></div>
+      <div class="hero-overlay"></div>
+
+      <div class="hero-content">
+        <h1>
+          <span class="hero-heading-line">Let the <span class="text-sunshine">sunshine</span></span><br /><span class="text-wave-gradient" data-content-key="hero.heading2">back in</span>
+        </h1>
+        <p class="hero-sub" data-content-key="hero.subtitle">
+          Professional window cleaning that makes your world a little brighter. Locally owned, detail-obsessed, streak-free guaranteed.
+        </p>
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <button data-modal="quote" class="btn-primary">
+            <span>Get Your Free Quote</span>
+            <i class="ph-bold ph-arrow-right"></i>
+          </button>
+          <a href="#services" class="btn-secondary">
+            <i class="ph ph-eye"></i>
+            View Services
+          </a>
+        </div>
+      </div>
+
+      <div class="scroll-hint">
+        <span>Scroll</span>
+        <i class="ph ph-caret-down"></i>
+      </div>
+    </section>
+
+    <!-- Wave Divider: Hero to About -->
+    <div class="wave-divider" style="background: transparent; margin-top: -2px;">
+      <svg viewBox="0 0 1440 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <path fill="#ffffff" d="M0,40 C360,100 720,0 1080,60 C1260,90 1380,50 1440,40 L1440,100 L0,100 Z"/>
+      </svg>
+    </div>
+
+    <!-- ABOUT SECTION -->
+    <section id="about" class="about-section py-24 sm:py-32">
+      <div class="section-inner-md">
+        <div class="text-center reveal">
+          <div class="section-badge">
+            <i class="ph-fill ph-sparkle" style="font-size: 0.875rem;"></i>
+            About Us
+          </div>
+          <h2 class="section-title" data-content-key="about.title">Your New Favorite<br class="hidden sm:block" /> Window Cleaner</h2>
+          <div class="section-text mx-auto space-y-5">
+            <p data-content-key="about.body1">
+              We believe clean windows do more than improve appearance &mdash; they brighten homes, businesses, and the world outside.
+            </p>
+            <p data-content-key="about.body2">
+              We're a locally owned window cleaning company with reliable, detail-focused service you can count on. Our goal is simple: deliver spotless, streak-free windows while providing an easy, stress-free experience from start to finish.
+            </p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-16 reveal">
+          <div class="text-center p-6">
+            <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-wave-50 mb-4">
+              <i class="ph-fill ph-drop" style="font-size: 1.25rem; color: var(--color-wave-500);"></i>
+            </div>
+            <h4 class="font-[var(--font-heading)] font-bold text-deep-900 text-sm mb-1" data-content-key="about.trust1Title">Streak-Free</h4>
+            <p class="text-slate-500 text-sm" data-content-key="about.trust1Body">Guaranteed spotless results every time</p>
+          </div>
+          <div class="text-center p-6">
+            <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-wave-50 mb-4">
+              <i class="ph-fill ph-shield-check" style="font-size: 1.25rem; color: var(--color-wave-500);"></i>
+            </div>
+            <h4 class="font-[var(--font-heading)] font-bold text-deep-900 text-sm mb-1" data-content-key="about.trust2Title">Fully Insured</h4>
+            <p class="text-slate-500 text-sm" data-content-key="about.trust2Body">Licensed, bonded &amp; insured for your protection</p>
+          </div>
+          <div class="text-center p-6">
+            <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-wave-50 mb-4">
+              <i class="ph-fill ph-clock" style="font-size: 1.25rem; color: var(--color-wave-500);"></i>
+            </div>
+            <h4 class="font-[var(--font-heading)] font-bold text-deep-900 text-sm mb-1" data-content-key="about.trust3Title">On Time</h4>
+            <p class="text-slate-500 text-sm" data-content-key="about.trust3Body">Reliable scheduling that fits your life</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Wave Divider: About to Services -->
+    <div class="wave-divider" style="background: #fff;">
+      <svg viewBox="0 0 1440 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <path fill="var(--color-foam-100)" d="M0,60 C240,10 480,90 720,40 C960,-10 1200,70 1440,30 L1440,100 L0,100 Z"/>
+      </svg>
+    </div>
+
+    <!-- SERVICES SECTION -->
+    <section id="services" class="services-section py-24 sm:py-32">
+      <div class="section-inner">
+        <div class="text-center mb-16 reveal">
+          <div class="section-badge mx-auto" style="display: inline-flex;">
+            <i class="ph-fill ph-squares-four" style="font-size: 0.875rem;"></i>
+            What We Do
+          </div>
+          <h2 class="section-title">Our Services</h2>
+          <p class="section-text mx-auto" data-content-key="services.intro">
+            From sparkling home windows to full commercial buildings &mdash; we've got you covered.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div class="service-card reveal reveal-delay-1">
+            <div class="service-icon">
+              <i class="ph-fill ph-house"></i>
+            </div>
+            <h3 data-content-key="services.residential.title">Residential Window Cleaning</h3>
+            <p data-content-key="services.residential.short">Eye-level perfection for every window in your home. Traditional tools, no shortcuts, no inflated pricing.</p>
+            <button data-modal="residential" class="service-btn">
+              <span>Learn more</span>
+              <i class="ph-bold ph-arrow-right"></i>
+            </button>
+          </div>
+
+          <div class="service-card reveal reveal-delay-2">
+            <div class="service-icon">
+              <i class="ph-fill ph-wrench"></i>
+            </div>
+            <h3 data-content-key="services.screenRepair.title">Window Screen Repair</h3>
+            <p data-content-key="services.screenRepair.short">Damaged screens restored to brand new. Choose from five premium screen materials.</p>
+            <button data-modal="screen-repair" class="service-btn">
+              <span>Learn more</span>
+              <i class="ph-bold ph-arrow-right"></i>
+            </button>
+          </div>
+
+          <div class="service-card reveal reveal-delay-3">
+            <div class="service-icon">
+              <i class="ph-fill ph-buildings"></i>
+            </div>
+            <h3 data-content-key="services.commercial.title">Commercial Window Cleaning</h3>
+            <p data-content-key="services.commercial.short">Tailored to your business schedule &mdash; done before doors open. Biweekly plans available.</p>
+            <button data-modal="commercial" class="service-btn">
+              <span>Learn more</span>
+              <i class="ph-bold ph-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Wave Divider: Services to CTA -->
+    <div class="wave-divider" style="background: var(--color-foam-100);">
+      <svg viewBox="0 0 1440 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <path fill="var(--color-deep-900)" d="M0,50 C320,90 640,10 960,60 C1120,85 1320,40 1440,50 L1440,100 L0,100 Z"/>
+      </svg>
+    </div>
+
+    <!-- BOTTOM CTA -->
+    <section class="cta-banner py-32 sm:py-44 text-center">
+      <div class="section-inner-sm relative z-10 reveal">
+        <h2 class="font-[var(--font-heading)] text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white mb-5 tracking-tight" data-content-key="cta.title">
+          Ready for crystal clear windows?
+        </h2>
+        <p class="text-wave-200 text-lg mb-12 max-w-xl mx-auto leading-relaxed opacity-80" data-content-key="cta.subtitle">
+          Get a free, no-pressure quote in minutes. We'll take it from there.
+        </p>
+        <button data-modal="quote" class="btn-primary">
+          <span>Get Your Free Quote</span>
+          <i class="ph-bold ph-arrow-right"></i>
+        </button>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="site-footer py-16">
+      <div class="section-inner">
+        <div class="flex flex-col md:flex-row items-center justify-between gap-8">
+          <div class="flex items-center gap-3">
+            <img src="/logo.png" alt="Crystal Vision Co." class="h-9 w-9 rounded-full opacity-90" />
+            <div>
+              <span class="font-[var(--font-heading)] text-white font-bold text-sm">Crystal Vision Co.</span>
+              <p class="text-white/30 text-xs">Professional Window Cleaning</p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-6">
+            <a href="#hero" class="footer-link">Home</a>
+            <a href="#about" class="footer-link">About</a>
+            <a href="#services" class="footer-link">Services</a>
+            <a href="https://www.instagram.com/crystalvisionusa/" data-content-href="business.instagramUrl" target="_blank" rel="noopener noreferrer" class="footer-link" aria-label="Instagram">
+              <i class="ph-fill ph-instagram-logo" style="font-size: 1.125rem;"></i>
+            </a>
+          </div>
+
+          <a href="#" id="pay-invoice-link" data-content-href="business.payInvoiceUrl" class="footer-link inline-flex items-center gap-2">
+            <i class="ph ph-credit-card" style="font-size: 1rem;"></i>
+            <span>Pay Invoice</span>
+          </a>
+        </div>
+
+        <div class="border-t border-white/10 mt-8 pt-8 text-center">
+          <p class="text-white/30 text-xs">
+            &copy; <span id="current-year"></span> Crystal Vision Co. All rights reserved.
+          </p>
+        </div>
+      </div>
+    </footer>
+
+    <!-- MODALS -->
+
+    <!-- Quote Modal -->
+    <div id="modal-quote" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-quote-title">
+      <div class="modal-panel">
+        <div class="flex items-start justify-between mb-6">
+          <div>
+            <div class="modal-icon">
+              <i class="ph-fill ph-chat-circle-dots"></i>
+            </div>
+            <h3 id="modal-quote-title" class="font-[var(--font-heading)] text-xl font-bold text-deep-900">
+              Request a Free Quote
+            </h3>
+            <p class="text-slate-500 text-sm mt-1">We'll get back to you within a few hours.</p>
+          </div>
+          <button data-close-modal class="modal-close" aria-label="Close">
+            <i class="ph ph-x"></i>
+          </button>
+        </div>
+        <form id="quote-form" class="space-y-4">
+          <div class="form-field">
+            <label for="quote-name" class="form-label">Your Name</label>
+            <input id="quote-name" name="name" type="text" required placeholder="John Smith" class="form-input" />
+          </div>
+          <div class="form-field">
+            <label for="quote-phone" class="form-label">Phone Number</label>
+            <input id="quote-phone" name="phone" type="tel" required placeholder="(555) 123-4567" class="form-input" />
+          </div>
+          <div class="form-field">
+            <label for="quote-message" class="form-label">Message <span class="text-slate-400 font-normal">(optional)</span></label>
+            <textarea id="quote-message" name="message" rows="3" placeholder="Tell us about your windows, home size, or any special requests..." class="form-input" style="resize: none;"></textarea>
+          </div>
+          <button type="submit" class="form-submit">
+            <i class="ph-bold ph-paper-plane-tilt"></i>
+            <span>Send Quote Request</span>
+          </button>
+          <div id="quote-success" class="hidden text-center py-6">
+            <div class="inline-flex items-center justify-center w-14 h-14 rounded-full mb-3" style="background: #ecfdf5;">
+              <i class="ph-fill ph-check-circle" style="font-size: 1.75rem; color: #10b981;"></i>
+            </div>
+            <p class="font-[var(--font-heading)] text-lg font-bold text-deep-900">Quote request sent!</p>
+            <p class="text-slate-500 text-sm mt-1">We'll get back to you shortly.</p>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Residential Modal -->
+    <div id="modal-residential" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-residential-title">
+      <div class="modal-panel">
+        <div class="flex items-start justify-between mb-6">
+          <div>
+            <div class="modal-icon">
+              <i class="ph-fill ph-house"></i>
+            </div>
+            <h3 id="modal-residential-title" class="font-[var(--font-heading)] text-xl font-bold text-deep-900">
+              Residential Window Cleaning
+            </h3>
+          </div>
+          <button data-close-modal class="modal-close" aria-label="Close">
+            <i class="ph ph-x"></i>
+          </button>
+        </div>
+        <p class="text-slate-600 leading-relaxed" style="font-size: 0.9375rem;" data-content-key="services.residential.full">
+          Our main gig. We get eye level with your windows and clean them using traditional equipment to ensure perfection. We will never take shortcuts and we won't jack up the price for it, either.
+        </p>
+        <div class="mt-8">
+          <button data-close-modal data-open-modal="quote" class="form-submit">
+            Get a Free Quote
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Screen Repair Modal -->
+    <div id="modal-screen-repair" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-screen-repair-title">
+      <div class="modal-panel">
+        <div class="flex items-start justify-between mb-6">
+          <div>
+            <div class="modal-icon">
+              <i class="ph-fill ph-wrench"></i>
+            </div>
+            <h3 id="modal-screen-repair-title" class="font-[var(--font-heading)] text-xl font-bold text-deep-900">
+              Window Screen Repair
+            </h3>
+          </div>
+          <button data-close-modal class="modal-close" aria-label="Close">
+            <i class="ph ph-x"></i>
+          </button>
+        </div>
+        <p class="text-slate-600 leading-relaxed mb-5" style="font-size: 0.9375rem;" data-content-key="services.screenRepair.full">
+          Our most specialized and technical skill! We take your damaged window screens home and reinstall them looking brand new. We also allow you to pick from our premium screen materials:
+        </p>
+        <ul class="space-y-3">
+          <li class="flex items-center gap-3 text-slate-600" style="font-size: 0.9375rem;">
+            <span class="bullet-dot"></span>
+            <span>High transparency fiberglass</span>
+          </li>
+          <li class="flex items-center gap-3 text-slate-600" style="font-size: 0.9375rem;">
+            <span class="bullet-dot"></span>
+            <span>Durable aluminum</span>
+          </li>
+          <li class="flex items-center gap-3 text-slate-600" style="font-size: 0.9375rem;">
+            <span class="bullet-dot"></span>
+            <span>Pet resistant polyester</span>
+          </li>
+          <li class="flex items-center gap-3 text-slate-600" style="font-size: 0.9375rem;">
+            <span class="bullet-dot"></span>
+            <span>Energy efficient solar screen</span>
+          </li>
+          <li class="flex items-center gap-3 text-slate-600" style="font-size: 0.9375rem;">
+            <span class="bullet-dot"></span>
+            <span>Tiny mesh for no-see-um bugs</span>
+          </li>
+        </ul>
+        <div class="mt-8">
+          <button data-close-modal data-open-modal="quote" class="form-submit">
+            Get a Free Quote
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Commercial Modal -->
+    <div id="modal-commercial" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-commercial-title">
+      <div class="modal-panel">
+        <div class="flex items-start justify-between mb-6">
+          <div>
+            <div class="modal-icon">
+              <i class="ph-fill ph-buildings"></i>
+            </div>
+            <h3 id="modal-commercial-title" class="font-[var(--font-heading)] text-xl font-bold text-deep-900">
+              Commercial Window Cleaning
+            </h3>
+          </div>
+          <button data-close-modal class="modal-close" aria-label="Close">
+            <i class="ph ph-x"></i>
+          </button>
+        </div>
+        <p class="text-slate-600 leading-relaxed" style="font-size: 0.9375rem;" data-content-key="services.commercial.full">
+          Designed to fit the needs and schedule of your business. Typically, we start our commercial cleanings at 5AM and finish before customers arrive at your business! Most of our commercial customers sign up for biweekly cleanings.
+        </p>
+        <div class="mt-8">
+          <button data-close-modal data-open-modal="quote" class="form-submit">
+            Get a Free Quote
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Script -->
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — Crystal Vision Co.</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Lexend', 'sans-serif'] },
+          colors: {
+            deep: { 950: '#011627', 900: '#012a47', 800: '#013a5c' },
+            wave: { 300: '#48CAE4', 400: '#00B4D8', 500: '#0096C7' },
+            foam: { 50: '#f0faff', 100: '#e0f4ff' },
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    body { font-family: 'Lexend', sans-serif; }
+    .tab-btn.active { background: #00B4D8; color: #011627; font-weight: 600; }
+    .tab-btn { transition: background 0.2s, color 0.2s; }
+    .accordion-body { max-height: 0; overflow: hidden; transition: max-height 0.35s ease; }
+    .accordion-body.open { max-height: 2000px; }
+    .accordion-icon { transition: transform 0.25s; }
+    .accordion-icon.open { transform: rotate(180deg); }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #012a47; }
+    ::-webkit-scrollbar-thumb { background: #00B4D8; border-radius: 3px; }
+    #toast { transition: opacity 0.4s, transform 0.4s; }
+    .stat-card { background: linear-gradient(135deg, #012a47 0%, #013a5c 100%); border: 1px solid rgba(0,180,216,0.2); }
+  </style>
+</head>
+<body class="bg-deep-950 text-slate-200 min-h-screen">
+
+<!-- ═══════════════════════════════════════════
+     LOGIN SCREEN
+═══════════════════════════════════════════ -->
+<div id="login-screen" class="min-h-screen flex items-center justify-center p-4">
+  <div class="w-full max-w-sm">
+    <!-- Logo -->
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-wave-400 mb-4">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+          <path d="M4 22 Q10 16 16 22 Q22 28 28 22" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <path d="M4 16 Q10 10 16 16 Q22 22 28 16" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <path d="M4 10 Q10 4 16 10 Q22 16 28 10" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+        </svg>
+      </div>
+      <h1 class="text-2xl font-bold text-white">Crystal Vision Co.</h1>
+      <p class="text-slate-400 text-sm mt-1 font-light">Admin Dashboard</p>
+    </div>
+
+    <!-- Card -->
+    <div class="bg-deep-900 border border-slate-700/50 rounded-2xl p-8 shadow-2xl">
+      <h2 class="text-lg font-semibold text-white mb-6">Sign In</h2>
+      <form id="login-form" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-slate-300 mb-1.5">Password</label>
+          <input
+            id="login-password"
+            type="password"
+            autocomplete="current-password"
+            placeholder="Enter admin password"
+            class="w-full px-4 py-2.5 rounded-xl bg-deep-950 border border-slate-600 text-white placeholder-slate-500 focus:outline-none focus:border-wave-400 focus:ring-1 focus:ring-wave-400 transition text-sm"
+          />
+        </div>
+        <div id="login-error" class="hidden text-red-400 text-sm py-2 px-3 bg-red-400/10 rounded-lg border border-red-400/20"></div>
+        <button
+          type="submit"
+          id="login-btn"
+          class="w-full py-2.5 px-4 rounded-xl bg-wave-400 hover:bg-wave-500 text-deep-950 font-semibold text-sm transition focus:outline-none focus:ring-2 focus:ring-wave-400 focus:ring-offset-2 focus:ring-offset-deep-900"
+        >
+          Sign In
+        </button>
+      </form>
+    </div>
+
+    <p class="text-center text-slate-600 text-xs mt-6">Crystal Vision Co. &copy; <span id="login-year"></span></p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     ADMIN APP (hidden until logged in)
+═══════════════════════════════════════════ -->
+<div id="admin-app" class="hidden min-h-screen flex flex-col">
+
+  <!-- Top Bar -->
+  <header class="bg-deep-900 border-b border-slate-700/60 h-14 flex items-center justify-between px-6 flex-shrink-0 z-20">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-lg bg-wave-400 flex items-center justify-center">
+        <svg width="16" height="16" viewBox="0 0 32 32" fill="none">
+          <path d="M4 22 Q10 16 16 22 Q22 28 28 22" stroke="#011627" stroke-width="3" stroke-linecap="round" fill="none"/>
+          <path d="M4 16 Q10 10 16 16 Q22 22 28 16" stroke="#011627" stroke-width="3" stroke-linecap="round" fill="none"/>
+          <path d="M4 10 Q10 4 16 10 Q22 16 28 10" stroke="#011627" stroke-width="3" stroke-linecap="round" fill="none"/>
+        </svg>
+      </div>
+      <span class="font-semibold text-white text-sm">Crystal Vision</span>
+      <span class="text-slate-500 text-sm font-light">/ Admin</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <a href="/" target="_blank" class="text-xs text-slate-400 hover:text-wave-300 transition flex items-center gap-1.5">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        View Site
+      </a>
+      <button id="logout-btn" class="text-xs text-slate-400 hover:text-red-400 transition px-3 py-1.5 rounded-lg border border-slate-700 hover:border-red-400/40">
+        Log Out
+      </button>
+    </div>
+  </header>
+
+  <div class="flex flex-1 min-h-0">
+    <!-- Sidebar -->
+    <aside class="w-56 bg-deep-900 border-r border-slate-700/60 flex flex-col py-6 flex-shrink-0">
+      <nav class="space-y-1 px-3">
+        <button class="tab-btn active w-full text-left px-4 py-2.5 rounded-xl text-sm flex items-center gap-3" data-tab="dashboard">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          Dashboard
+        </button>
+        <button class="tab-btn w-full text-left px-4 py-2.5 rounded-xl text-sm flex items-center gap-3 hover:bg-deep-800" data-tab="content">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Content Editor
+        </button>
+        <button class="tab-btn w-full text-left px-4 py-2.5 rounded-xl text-sm flex items-center gap-3 hover:bg-deep-800" data-tab="quotes">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          Quotes
+          <span id="quotes-badge" class="ml-auto bg-wave-400/20 text-wave-300 text-xs px-2 py-0.5 rounded-full font-medium"></span>
+        </button>
+      </nav>
+
+      <div class="mt-auto px-3">
+        <div class="bg-deep-800/60 rounded-xl p-3 text-xs text-slate-500 border border-slate-700/40">
+          <p class="font-medium text-slate-400 mb-1">Tip</p>
+          <p>Changes to content take effect immediately when saved.</p>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto">
+
+      <!-- ── TAB: DASHBOARD ─────────────────── -->
+      <div id="tab-dashboard" class="tab-panel p-8">
+        <div class="mb-8">
+          <h2 class="text-2xl font-bold text-white">Dashboard</h2>
+          <p class="text-slate-400 text-sm mt-1 font-light">Site statistics &amp; recent activity</p>
+        </div>
+
+        <!-- Stat Cards -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div class="stat-card rounded-2xl p-5">
+            <p class="text-xs font-medium text-slate-400 uppercase tracking-wider mb-3">Views (30d)</p>
+            <p id="stat-views" class="text-3xl font-bold text-white">—</p>
+          </div>
+          <div class="stat-card rounded-2xl p-5">
+            <p class="text-xs font-medium text-slate-400 uppercase tracking-wider mb-3">Unique (30d)</p>
+            <p id="stat-unique" class="text-3xl font-bold text-white">—</p>
+          </div>
+          <div class="stat-card rounded-2xl p-5">
+            <p class="text-xs font-medium text-slate-400 uppercase tracking-wider mb-3">Quotes Total</p>
+            <p id="stat-quotes" class="text-3xl font-bold text-white">—</p>
+          </div>
+          <div class="stat-card rounded-2xl p-5">
+            <p class="text-xs font-medium text-slate-400 uppercase tracking-wider mb-3">Views Today</p>
+            <p id="stat-today" class="text-3xl font-bold text-wave-300">—</p>
+          </div>
+        </div>
+
+        <!-- Chart + Referrers -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <div class="lg:col-span-2 bg-deep-900 border border-slate-700/50 rounded-2xl p-6">
+            <h3 class="text-sm font-semibold text-white mb-4">Daily Page Views — Last 30 Days</h3>
+            <div class="relative h-52">
+              <canvas id="views-chart"></canvas>
+            </div>
+          </div>
+
+          <div class="bg-deep-900 border border-slate-700/50 rounded-2xl p-6">
+            <h3 class="text-sm font-semibold text-white mb-4">Top Referrers</h3>
+            <div id="referrers-list" class="space-y-3 text-sm">
+              <p class="text-slate-500 text-xs">Loading…</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Quotes -->
+        <div class="bg-deep-900 border border-slate-700/50 rounded-2xl p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-semibold text-white">Recent Quote Requests</h3>
+            <button class="tab-btn text-xs text-wave-300 hover:text-wave-400 transition" data-tab="quotes">View All →</button>
+          </div>
+          <div id="recent-quotes-list" class="space-y-3">
+            <p class="text-slate-500 text-xs">Loading…</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── TAB: CONTENT EDITOR ─────────────────── -->
+      <div id="tab-content" class="tab-panel hidden p-8">
+        <div class="mb-8 flex items-start justify-between">
+          <div>
+            <h2 class="text-2xl font-bold text-white">Content Editor</h2>
+            <p class="text-slate-400 text-sm mt-1 font-light">Edit the text and links displayed on your website</p>
+          </div>
+          <button id="save-all-btn" class="px-5 py-2 rounded-xl bg-wave-400 hover:bg-wave-500 text-deep-950 font-semibold text-sm transition">
+            Save All Changes
+          </button>
+        </div>
+
+        <div id="content-editor" class="space-y-4 max-w-3xl">
+          <!-- Accordion sections injected by JS -->
+          <p class="text-slate-500 text-sm">Loading content…</p>
+        </div>
+      </div>
+
+      <!-- ── TAB: QUOTES ─────────────────── -->
+      <div id="tab-quotes" class="tab-panel hidden p-8">
+        <div class="mb-8">
+          <h2 class="text-2xl font-bold text-white">Quote Requests</h2>
+          <p class="text-slate-400 text-sm mt-1 font-light">All submissions from the contact form</p>
+        </div>
+
+        <!-- Search -->
+        <div class="mb-5">
+          <input
+            id="quotes-search"
+            type="text"
+            placeholder="Search by name, phone, or message…"
+            class="w-full max-w-md px-4 py-2.5 rounded-xl bg-deep-900 border border-slate-600 text-white placeholder-slate-500 focus:outline-none focus:border-wave-400 focus:ring-1 focus:ring-wave-400 transition text-sm"
+          />
+        </div>
+
+        <div class="bg-deep-900 border border-slate-700/50 rounded-2xl overflow-hidden">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-slate-700/60 bg-deep-800/50">
+                <th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-slate-400">Name</th>
+                <th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-slate-400">Phone</th>
+                <th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-slate-400 hidden md:table-cell">Message</th>
+                <th class="text-right px-5 py-3 text-xs font-semibold uppercase tracking-wider text-slate-400">Date</th>
+              </tr>
+            </thead>
+            <tbody id="quotes-tbody">
+              <tr><td colspan="4" class="px-5 py-8 text-slate-500 text-xs text-center">Loading…</td></tr>
+            </tbody>
+          </table>
+          <div id="quotes-empty" class="hidden px-5 py-12 text-center">
+            <p class="text-slate-500 text-sm">No quotes found.</p>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="fixed bottom-6 right-6 z-50 opacity-0 translate-y-4 pointer-events-none">
+  <div id="toast-inner" class="px-5 py-3 rounded-xl shadow-xl text-sm font-medium flex items-center gap-3"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     JAVASCRIPT
+═══════════════════════════════════════════ -->
+<script>
+const TOKEN_KEY = 'cv_admin_token';
+let allQuotes = [];
+let viewsChart = null;
+let currentContent = {};
+
+// ────────────────────────────
+// Utilities
+// ────────────────────────────
+function api(path, opts = {}) {
+  const token = localStorage.getItem(TOKEN_KEY);
+  return fetch(path, {
+    ...opts,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(opts.headers || {}),
+    },
+    body: opts.body ? (typeof opts.body === 'string' ? opts.body : JSON.stringify(opts.body)) : undefined,
+  });
+}
+
+function showToast(msg, ok = true) {
+  const t = document.getElementById('toast');
+  const inner = document.getElementById('toast-inner');
+  inner.className = `px-5 py-3 rounded-xl shadow-xl text-sm font-medium flex items-center gap-3 ${ok ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'}`;
+  inner.innerHTML = `<span>${ok ? '✓' : '✕'}</span><span>${msg}</span>`;
+  t.classList.remove('opacity-0', 'translate-y-4', 'pointer-events-none');
+  setTimeout(() => { t.classList.add('opacity-0', 'translate-y-4', 'pointer-events-none'); }, 3500);
+}
+
+function setPath(obj, dotPath, value) {
+  const keys = dotPath.split('.');
+  let cur = obj;
+  for (let i = 0; i < keys.length - 1; i++) {
+    if (!cur[keys[i]]) cur[keys[i]] = {};
+    cur = cur[keys[i]];
+  }
+  cur[keys[keys.length - 1]] = value;
+}
+
+function getPath(obj, dotPath) {
+  return dotPath.split('.').reduce((o, k) => (o && o[k] !== undefined ? o[k] : ''), obj);
+}
+
+function formatDate(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function formatDateShort(iso) {
+  if (!iso) return '';
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+// ────────────────────────────
+// Auth
+// ────────────────────────────
+async function checkAuth() {
+  const token = localStorage.getItem(TOKEN_KEY);
+  if (!token) return false;
+  try {
+    const r = await api('/api/admin/verify');
+    return r.ok;
+  } catch { return false; }
+}
+
+function showLogin() {
+  document.getElementById('login-screen').classList.remove('hidden');
+  document.getElementById('admin-app').classList.add('hidden');
+}
+
+function showApp() {
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('admin-app').classList.remove('hidden');
+  loadDashboard();
+  loadContent();
+  loadQuotes();
+}
+
+document.getElementById('login-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const pw = document.getElementById('login-password').value.trim();
+  const errEl = document.getElementById('login-error');
+  const btn = document.getElementById('login-btn');
+  errEl.classList.add('hidden');
+  btn.disabled = true;
+  btn.textContent = 'Signing in…';
+
+  try {
+    const r = await fetch('/api/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pw }),
+    });
+    const data = await r.json();
+    if (r.ok && data.token) {
+      localStorage.setItem(TOKEN_KEY, data.token);
+      showApp();
+    } else {
+      errEl.textContent = data.error || 'Incorrect password.';
+      errEl.classList.remove('hidden');
+    }
+  } catch (err) {
+    errEl.textContent = 'Could not reach server. Is the API running?';
+    errEl.classList.remove('hidden');
+  }
+  btn.disabled = false;
+  btn.textContent = 'Sign In';
+});
+
+document.getElementById('logout-btn').addEventListener('click', () => {
+  localStorage.removeItem(TOKEN_KEY);
+  showLogin();
+});
+
+// ────────────────────────────
+// Tab navigation
+// ────────────────────────────
+document.querySelectorAll('.tab-btn[data-tab]').forEach((btn) => {
+  btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+});
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn[data-tab]').forEach((b) => {
+    b.classList.toggle('active', b.dataset.tab === tab);
+    if (b.dataset.tab !== tab) b.classList.add('hover:bg-deep-800');
+    else b.classList.remove('hover:bg-deep-800');
+  });
+  document.querySelectorAll('.tab-panel').forEach((p) => {
+    p.classList.toggle('hidden', p.id !== `tab-${tab}`);
+  });
+}
+
+// ────────────────────────────
+// Dashboard
+// ────────────────────────────
+async function loadDashboard() {
+  try {
+    const r = await api('/api/admin/stats');
+    if (!r.ok) throw new Error('unauthorized');
+    const d = await r.json();
+
+    document.getElementById('stat-views').textContent = (d.views30d ?? 0).toLocaleString();
+    document.getElementById('stat-unique').textContent = (d.uniqueVisitors30d ?? 0).toLocaleString();
+    document.getElementById('stat-quotes').textContent = (d.totalQuotes ?? 0).toLocaleString();
+    document.getElementById('stat-today').textContent = (d.viewsToday ?? 0).toLocaleString();
+
+    renderChart(d.dailyViews || []);
+    renderReferrers(d.topReferrers || []);
+    renderRecentQuotes(d.recentQuotes || []);
+  } catch (err) {
+    console.error('Dashboard load error:', err);
+  }
+}
+
+function renderChart(dailyViews) {
+  const canvas = document.getElementById('views-chart');
+  if (!canvas) return;
+
+  // Fill 30 days
+  const days = [];
+  const counts = [];
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().split('T')[0];
+    const match = dailyViews.find((dv) => dv.date === key);
+    days.push(i === 0 ? 'Today' : formatDateShort(key));
+    counts.push(match ? match.count : 0);
+  }
+
+  if (viewsChart) viewsChart.destroy();
+  viewsChart = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: days,
+      datasets: [{
+        label: 'Page Views',
+        data: counts,
+        backgroundColor: 'rgba(0, 180, 216, 0.5)',
+        borderColor: '#00B4D8',
+        borderWidth: 1,
+        borderRadius: 4,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: {
+          ticks: { color: '#64748b', maxTicksLimit: 10, font: { family: 'Lexend', size: 10 } },
+          grid: { color: 'rgba(255,255,255,0.03)' },
+        },
+        y: {
+          ticks: { color: '#64748b', stepSize: 1, font: { family: 'Lexend', size: 10 } },
+          grid: { color: 'rgba(255,255,255,0.05)' },
+          beginAtZero: true,
+        },
+      },
+    },
+  });
+}
+
+function renderReferrers(refs) {
+  const el = document.getElementById('referrers-list');
+  if (!refs.length) { el.innerHTML = '<p class="text-slate-500 text-xs">No referrer data yet.</p>'; return; }
+  el.innerHTML = refs.map((r) => `
+    <div class="flex items-center justify-between gap-2">
+      <span class="text-slate-300 truncate text-xs flex-1" title="${r.referrer || 'Direct'}">${r.referrer ? new URL(r.referrer.startsWith('http') ? r.referrer : 'https://' + r.referrer).hostname.replace('www.', '') : 'Direct / None'}</span>
+      <span class="text-wave-400 text-xs font-semibold tabular-nums flex-shrink-0">${r.count}</span>
+    </div>
+  `).join('');
+}
+
+function renderRecentQuotes(quotes) {
+  const el = document.getElementById('recent-quotes-list');
+  if (!quotes.length) { el.innerHTML = '<p class="text-slate-500 text-xs">No quotes yet.</p>'; return; }
+  el.innerHTML = quotes.slice(0, 5).map((q) => `
+    <div class="flex items-start gap-4 py-3 border-b border-slate-700/40 last:border-0">
+      <div class="w-9 h-9 rounded-full bg-wave-400/15 border border-wave-400/30 flex items-center justify-center text-wave-300 font-semibold text-sm flex-shrink-0">
+        ${(q.name || '?')[0].toUpperCase()}
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center justify-between gap-2 mb-0.5">
+          <span class="text-sm font-medium text-white">${escHtml(q.name)}</span>
+          <span class="text-xs text-slate-500 flex-shrink-0">${formatDate(q.created_at)}</span>
+        </div>
+        <p class="text-xs text-slate-400 truncate">${escHtml(q.message || '(no message)')}</p>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ────────────────────────────
+// Content Editor
+// ────────────────────────────
+const SECTIONS = [
+  {
+    id: 'hero', label: 'Hero Section', icon: '✦',
+    fields: [
+      { key: 'hero.heading1', label: 'Heading Line 1', type: 'text', hint: 'First line of the main headline' },
+      { key: 'hero.heading2', label: 'Heading Line 2', type: 'text', hint: 'Second line (rendered in gradient)' },
+      { key: 'hero.subtitle', label: 'Subtitle', type: 'textarea', hint: 'Short description below the headline' },
+      { key: 'hero.ctaPrimary', label: 'Primary Button Text', type: 'text' },
+      { key: 'hero.ctaSecondary', label: 'Secondary Button Text', type: 'text' },
+    ],
+  },
+  {
+    id: 'about', label: 'About Section', icon: '◉',
+    fields: [
+      { key: 'about.title', label: 'Section Title', type: 'text' },
+      { key: 'about.body1', label: 'Paragraph 1', type: 'textarea' },
+      { key: 'about.body2', label: 'Paragraph 2', type: 'textarea' },
+      { key: 'about.trust1Title', label: 'Trust Point 1 — Title', type: 'text' },
+      { key: 'about.trust1Body', label: 'Trust Point 1 — Body', type: 'textarea' },
+      { key: 'about.trust2Title', label: 'Trust Point 2 — Title', type: 'text' },
+      { key: 'about.trust2Body', label: 'Trust Point 2 — Body', type: 'textarea' },
+      { key: 'about.trust3Title', label: 'Trust Point 3 — Title', type: 'text' },
+      { key: 'about.trust3Body', label: 'Trust Point 3 — Body', type: 'textarea' },
+    ],
+  },
+  {
+    id: 'services', label: 'Services Section', icon: '◈',
+    fields: [
+      { key: 'services.intro', label: 'Section Intro Text', type: 'textarea' },
+      { key: 'services.residential.title', label: 'Residential — Title', type: 'text' },
+      { key: 'services.residential.short', label: 'Residential — Card Preview', type: 'textarea' },
+      { key: 'services.residential.full', label: 'Residential — Full Description', type: 'textarea' },
+      { key: 'services.screenRepair.title', label: 'Screen Repair — Title', type: 'text' },
+      { key: 'services.screenRepair.short', label: 'Screen Repair — Card Preview', type: 'textarea' },
+      { key: 'services.screenRepair.full', label: 'Screen Repair — Full Description', type: 'textarea' },
+      { key: 'services.commercial.title', label: 'Commercial — Title', type: 'text' },
+      { key: 'services.commercial.short', label: 'Commercial — Card Preview', type: 'textarea' },
+      { key: 'services.commercial.full', label: 'Commercial — Full Description', type: 'textarea' },
+    ],
+  },
+  {
+    id: 'cta', label: 'Call to Action Section', icon: '◆',
+    fields: [
+      { key: 'cta.title', label: 'CTA Heading', type: 'text' },
+      { key: 'cta.subtitle', label: 'CTA Subtitle', type: 'textarea' },
+    ],
+  },
+  {
+    id: 'business', label: 'Business Info & Links', icon: '⬡',
+    fields: [
+      { key: 'business.name', label: 'Business Name', type: 'text' },
+      { key: 'business.instagramUrl', label: 'Instagram URL', type: 'url' },
+      { key: 'business.payInvoiceUrl', label: 'Pay Invoice URL', type: 'url' },
+    ],
+  },
+];
+
+async function loadContent() {
+  try {
+    const r = await api('/api/admin/content');
+    if (!r.ok) throw new Error('failed');
+    currentContent = await r.json();
+    renderContentEditor();
+  } catch {
+    document.getElementById('content-editor').innerHTML = '<p class="text-red-400 text-sm">Failed to load content.</p>';
+  }
+}
+
+function renderContentEditor() {
+  const container = document.getElementById('content-editor');
+  container.innerHTML = '';
+
+  SECTIONS.forEach((section, si) => {
+    const acc = document.createElement('div');
+    acc.className = 'bg-deep-900 border border-slate-700/50 rounded-2xl overflow-hidden';
+    acc.innerHTML = `
+      <button class="accordion-toggle w-full flex items-center justify-between px-6 py-4 text-left hover:bg-deep-800/50 transition" data-section="${section.id}">
+        <div class="flex items-center gap-3">
+          <span class="text-wave-400 text-lg leading-none">${section.icon}</span>
+          <span class="font-semibold text-white text-sm">${section.label}</span>
+        </div>
+        <svg class="accordion-icon w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="accordion-body ${si === 0 ? 'open' : ''}" id="acc-${section.id}">
+        <div class="px-6 pb-6 pt-2 space-y-5 border-t border-slate-700/40">
+          ${section.fields.map((f) => renderField(f)).join('')}
+          <div class="flex items-center justify-between pt-2">
+            <button class="save-section-btn px-4 py-2 rounded-lg bg-wave-400 hover:bg-wave-500 text-deep-950 font-semibold text-xs transition" data-section="${section.id}">
+              Save ${section.label}
+            </button>
+            <span class="save-status-${section.id} text-xs text-emerald-400 opacity-0 transition-opacity">Saved!</span>
+          </div>
+        </div>
+      </div>
+    `;
+    container.appendChild(acc);
+
+    // open first accordion
+    if (si === 0) {
+      const icon = acc.querySelector('.accordion-icon');
+      icon.classList.add('open');
+    }
+  });
+
+  // Accordion toggle
+  container.querySelectorAll('.accordion-toggle').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const sectionId = btn.dataset.section;
+      const body = document.getElementById(`acc-${sectionId}`);
+      const icon = btn.querySelector('.accordion-icon');
+      body.classList.toggle('open');
+      icon.classList.toggle('open');
+    });
+  });
+
+  // Save section buttons
+  container.querySelectorAll('.save-section-btn').forEach((btn) => {
+    btn.addEventListener('click', () => saveSection(btn.dataset.section));
+  });
+}
+
+function renderField(f) {
+  const val = escAttr(getPath(currentContent, f.key));
+  const fieldId = `field-${f.key.replace(/\./g, '-')}`;
+  const hint = f.hint ? `<p class="text-xs text-slate-500 mt-1">${f.hint}</p>` : '';
+
+  if (f.type === 'textarea') {
+    return `
+      <div>
+        <label for="${fieldId}" class="block text-xs font-medium text-slate-300 mb-1.5">${f.label}</label>
+        <textarea
+          id="${fieldId}"
+          data-key="${f.key}"
+          rows="3"
+          class="content-field w-full px-3 py-2 rounded-lg bg-deep-950 border border-slate-600 text-white text-sm resize-y focus:outline-none focus:border-wave-400 focus:ring-1 focus:ring-wave-400 transition"
+        >${val}</textarea>
+        ${hint}
+      </div>`;
+  }
+  return `
+    <div>
+      <label for="${fieldId}" class="block text-xs font-medium text-slate-300 mb-1.5">${f.label}</label>
+      <input
+        id="${fieldId}"
+        type="${f.type || 'text'}"
+        data-key="${f.key}"
+        value="${val}"
+        class="content-field w-full px-3 py-2 rounded-lg bg-deep-950 border border-slate-600 text-white text-sm focus:outline-none focus:border-wave-400 focus:ring-1 focus:ring-wave-400 transition"
+      />
+      ${hint}
+    </div>`;
+}
+
+function collectSectionData(sectionId) {
+  const body = document.getElementById(`acc-${sectionId}`);
+  const updates = {};
+  body.querySelectorAll('.content-field[data-key]').forEach((el) => {
+    setPath(updates, el.dataset.key, el.value);
+  });
+  return updates;
+}
+
+function mergeDeep(target, source) {
+  const out = Object.assign({}, target);
+  for (const key in source) {
+    if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
+      out[key] = mergeDeep(target[key] || {}, source[key]);
+    } else {
+      out[key] = source[key];
+    }
+  }
+  return out;
+}
+
+async function saveSection(sectionId) {
+  const updates = collectSectionData(sectionId);
+  const merged = mergeDeep(currentContent, updates);
+  await saveContent(merged, sectionId);
+}
+
+document.getElementById('save-all-btn').addEventListener('click', async () => {
+  let merged = { ...currentContent };
+  SECTIONS.forEach((s) => {
+    merged = mergeDeep(merged, collectSectionData(s.id));
+  });
+  await saveContent(merged, null);
+});
+
+async function saveContent(content, sectionId) {
+  try {
+    const r = await api('/api/admin/content', {
+      method: 'PUT',
+      body: JSON.stringify(content),
+    });
+    if (!r.ok) throw new Error('save failed');
+    currentContent = content;
+    if (sectionId) {
+      const statusEl = document.querySelector(`.save-status-${sectionId}`);
+      if (statusEl) {
+        statusEl.style.opacity = '1';
+        setTimeout(() => { statusEl.style.opacity = '0'; }, 2500);
+      }
+    }
+    showToast(sectionId ? 'Section saved!' : 'All changes saved!');
+  } catch {
+    showToast('Failed to save content.', false);
+  }
+}
+
+// ────────────────────────────
+// Quotes
+// ────────────────────────────
+async function loadQuotes() {
+  try {
+    const r = await api('/api/admin/quotes');
+    if (!r.ok) throw new Error('failed');
+    allQuotes = await r.json();
+    const badge = document.getElementById('quotes-badge');
+    if (allQuotes.length) badge.textContent = allQuotes.length;
+    renderQuotesTable(allQuotes);
+  } catch {
+    document.getElementById('quotes-tbody').innerHTML = '<tr><td colspan="4" class="px-5 py-8 text-red-400 text-xs text-center">Failed to load quotes.</td></tr>';
+  }
+}
+
+function renderQuotesTable(quotes) {
+  const tbody = document.getElementById('quotes-tbody');
+  const empty = document.getElementById('quotes-empty');
+  if (!quotes.length) {
+    tbody.innerHTML = '';
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+  tbody.innerHTML = quotes.map((q) => `
+    <tr class="border-b border-slate-700/30 hover:bg-deep-800/40 transition">
+      <td class="px-5 py-3.5 font-medium text-white">${escHtml(q.name)}</td>
+      <td class="px-5 py-3.5 text-slate-300">
+        <a href="tel:${escAttr(q.phone)}" class="hover:text-wave-300 transition">${escHtml(q.phone)}</a>
+      </td>
+      <td class="px-5 py-3.5 text-slate-400 hidden md:table-cell max-w-xs">
+        <span class="line-clamp-2 block text-xs" title="${escAttr(q.message)}">${escHtml(q.message || '—')}</span>
+      </td>
+      <td class="px-5 py-3.5 text-slate-500 text-xs text-right whitespace-nowrap">${formatDate(q.created_at)}</td>
+    </tr>
+  `).join('');
+}
+
+document.getElementById('quotes-search').addEventListener('input', (e) => {
+  const q = e.target.value.toLowerCase();
+  const filtered = allQuotes.filter((r) =>
+    (r.name || '').toLowerCase().includes(q) ||
+    (r.phone || '').toLowerCase().includes(q) ||
+    (r.message || '').toLowerCase().includes(q)
+  );
+  renderQuotesTable(filtered);
+});
+
+// ────────────────────────────
+// Escape helpers
+// ────────────────────────────
+function escHtml(str) {
+  return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+function escAttr(str) {
+  return String(str || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+// ────────────────────────────
+// Init
+// ────────────────────────────
+document.getElementById('login-year').textContent = new Date().getFullYear();
+
+(async () => {
+  const authed = await checkAuth();
+  if (authed) {
+    showApp();
+  } else {
+    showLogin();
+  }
+})();
+</script>
+</body>
+</html>
