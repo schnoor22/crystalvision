@@ -35,7 +35,7 @@
       <div class="max-w-7xl mx-auto px-5 sm:px-8 flex items-center justify-between">
         <a href="#" class="flex items-center gap-3 group">
           <img src="/logo.png" alt="Crystal Vision Co." class="h-11 w-11 rounded-full shadow-md group-hover:shadow-lg transition-shadow" />
-          <span class="font-[var(--font-heading)] text-base font-bold text-white tracking-tight hidden sm:block">
+          <span class="font-brand text-xl text-white">
             Crystal Vision Co.
           </span>
         </a>
@@ -62,7 +62,7 @@
     <!-- Mobile Drawer -->
     <nav id="mobile-drawer" class="mobile-drawer md:hidden">
       <div class="flex items-center justify-between mb-10">
-        <span class="font-[var(--font-heading)] text-white font-bold text-sm tracking-tight">Crystal Vision Co.</span>
+        <span class="font-brand text-white text-xl">Crystal Vision Co.</span>
         <button id="drawer-close" class="hamburger" aria-label="Close menu">
           <i class="ph-bold ph-x"></i>
         </button>
@@ -221,15 +221,16 @@
       </div>
     </section>
 
-    <!-- Wave Divider: Services to CTA -->
-    <div class="wave-divider" style="background: var(--color-foam-100);">
-      <svg viewBox="0 0 1440 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-        <path fill="var(--color-deep-900)" d="M0,50 C320,90 640,10 960,60 C1120,85 1320,40 1440,50 L1440,100 L0,100 Z"/>
+    <!-- Wave Divider: Services to CTA (animated) -->
+    <div class="cta-wave-wrap" aria-hidden="true">
+      <svg class="cta-wave-svg" viewBox="0 0 2880 130" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <path class="cta-wave-back" d="M0,80 C240,30 480,110 720,65 C960,20 1200,100 1440,55 C1680,10 1920,95 2160,55 C2400,15 2640,90 2880,55 L2880,130 L0,130 Z"/>
+        <path class="cta-wave-front" d="M0,95 C200,55 400,120 600,80 C800,40 1000,115 1200,75 C1400,35 1600,115 1800,75 C2000,35 2200,110 2400,75 C2600,40 2740,100 2880,80 L2880,130 L0,130 Z"/>
       </svg>
     </div>
 
     <!-- BOTTOM CTA -->
-    <section class="cta-banner py-32 sm:py-44 text-center">
+    <section class="cta-banner pt-32 pb-44 sm:pt-44 sm:pb-56 text-center">
       <div class="section-inner-sm relative z-10 reveal">
         <h2 class="font-[var(--font-heading)] text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white mb-5 tracking-tight" data-content-key="cta.title">
           Ready for crystal clear windows?
@@ -251,7 +252,7 @@
           <div class="flex items-center gap-3">
             <img src="/logo.png" alt="Crystal Vision Co." class="h-9 w-9 rounded-full opacity-90" />
             <div>
-              <span class="font-[var(--font-heading)] text-white font-bold text-sm">Crystal Vision Co.</span>
+              <span class="font-brand text-white text-xl">Crystal Vision Co.</span>
               <p class="text-white/30 text-xs">Professional Window Cleaning</p>
             </div>
           </div>

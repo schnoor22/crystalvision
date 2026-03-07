@@ -44,7 +44,6 @@ let skipped = false;
 
 export function shouldPlayAnimation() {
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false;
-  if (sessionStorage.getItem('cv-anim-done')) return false;
   return true;
 }
 
@@ -353,8 +352,6 @@ function roundRect(x, y, w2, h2, r) {
 // -- Finish --------------------------------------------------
 
 function finish() {
-  sessionStorage.setItem("cv-anim-done", "true");
-
   const overlay = document.getElementById("animation-overlay");
   const skipBtn = document.getElementById("skip-btn");
 
