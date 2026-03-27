@@ -30,6 +30,12 @@ function applyContent(content) {
     const val = getPath(content, el.dataset.contentHref);
     if (val) el.href = val;
   });
+
+  // Background image styles
+  document.querySelectorAll('[data-content-bgurl]').forEach((el) => {
+    const val = getPath(content, el.dataset.contentBgurl);
+    if (val) el.style.backgroundImage = `url('${val}')`;
+  });
 }
 
 // ─── Load content (cache-first, then fresh) ──────────────────

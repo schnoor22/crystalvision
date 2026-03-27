@@ -26,11 +26,14 @@ const Database  = require('better-sqlite3');
 const path   = require('path');
 const fs     = require('fs');
 const crypto = require('crypto');
+const multer = require('multer');
+let sharp;
+try { sharp = require('sharp'); } catch { sharp = null; }
 
 // ─── Config ─────────────────────────────────────────────────
 
 const PORT           = process.env.PORT           || 3000;
-const OWNER_EMAIL    = process.env.OWNER_EMAIL    || 'owner@crystalvisionco.com';
+const OWNER_EMAIL    = process.env.OWNER_EMAIL    || 'info@crystalvisionusa.com';
 const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'changeme123';
 
@@ -38,6 +41,9 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'changeme123';
 
 const dataDir = path.join(__dirname, 'data');
 if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+
+const portfolioDir = path.join(dataDir, 'portfolio');
+if (!fs.existsSync(portfolioDir)) fs.mkdirSync(portfolioDir, { recursive: true });
 
 const db = new Database(path.join(dataDir, 'site.db'));
 
@@ -58,10 +64,49 @@ db.exec(`
     user_agent TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
+
+  CREATE TABLE IF NOT EXISTS portfolio (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    filename   TEXT NOT NULL,
+    caption    TEXT DEFAULT '',
+    sort_order INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
 `);
 
 const insertQuote = db.prepare('INSERT INTO quotes (name, phone, message, ip) VALUES (?, ?, ?, ?)');
 const insertView  = db.prepare('INSERT INTO page_views (ip, referrer, user_agent) VALUES (?, ?, ?)');
+
+// ─── Multer — Portfolio Image Uploads ───────────────────────
+
+const portfolioStorage = multer.diskStorage({
+  destination: portfolioDir,
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase().replace(/[^.a-z0-9]/g, '') || '.jpg';
+    cb(null, `${Date.now()}-${crypto.randomBytes(6).toString('hex')}${ext}`);
+  },
+});
+
+const upload = multer({
+  storage: portfolioStorage,
+  limits: { fileSize: 15 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (/^image\/(jpeg|png|webp|gif)$/.test(file.mimetype)) cb(null, true);
+    else cb(new Error('Images only (jpeg, png, webp, gif)'));
+  },
+});
+
+// ─── Multer — Hero Background Image ──────────────────────────
+
+// Stored in memory so sharp can process before writing to disk
+const heroUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 20 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (/^image\/(jpeg|png|webp)$/.test(file.mimetype)) cb(null, true);
+    else cb(new Error('Images only (jpeg, png, webp)'));
+  },
+});
 
 // ─── Content File ────────────────────────────────────────────
 
@@ -89,6 +134,7 @@ function getDefaultContent() {
       subtitle: 'Professional window cleaning that makes your world a little brighter. Locally owned, detail-obsessed, streak-free guaranteed.',
       ctaPrimary: 'Get Your Free Quote',
       ctaSecondary: 'View Services',
+      backgroundUrl: '/background.jpg',
     },
     about: {
       title: 'Your New Favorite Window Cleaner',
@@ -125,8 +171,11 @@ function getDefaultContent() {
     },
     business: {
       name: 'Crystal Vision Co.',
+      phone: '(503) 545-4706',
+      phoneUrl: 'tel:+15035454706',
+      email: 'info@crystalvisionusa.com',
       instagramUrl: 'https://www.instagram.com/crystalvisionusa/',
-      payInvoiceUrl: '#',
+      payInvoiceUrl: 'https://venmo.com/u/Kidschmid',
     },
   };
 }
@@ -293,13 +342,90 @@ app.get('/api/admin/quotes', requireAuth, (_req, res) => {
   res.json(quotes);
 });
 
+// ─── Portfolio Routes ─────────────────────────────────────────
+
+// Public portfolio
+app.get('/api/portfolio', (_req, res) => {
+  const items = db.prepare(
+    'SELECT id, filename, caption FROM portfolio ORDER BY sort_order ASC, id DESC'
+  ).all();
+  res.json(items);
+});
+
+// Upload portfolio image (admin)
+app.post('/api/admin/portfolio', requireAuth, upload.single('image'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No image uploaded.' });
+  const caption    = (req.body.caption    || '').substring(0, 200);
+  const sort_order = parseInt(req.body.sort_order) || 0;
+  const result = db.prepare(
+    'INSERT INTO portfolio (filename, caption, sort_order) VALUES (?, ?, ?)'
+  ).run(req.file.filename, caption, sort_order);
+  res.json({ ok: true, id: result.lastInsertRowid, filename: req.file.filename });
+});
+
+// Update caption / sort order (admin)
+app.patch('/api/admin/portfolio/:id', requireAuth, (req, res) => {
+  const { caption = '', sort_order = 0 } = req.body;
+  db.prepare('UPDATE portfolio SET caption = ?, sort_order = ? WHERE id = ?')
+    .run(caption.substring(0, 200), parseInt(sort_order) || 0, Number(req.params.id));
+  res.json({ ok: true });
+});
+
+// Delete portfolio image (admin)
+app.delete('/api/admin/portfolio/:id', requireAuth, (req, res) => {
+  const item = db.prepare('SELECT filename FROM portfolio WHERE id = ?').get(Number(req.params.id));
+  if (!item) return res.status(404).json({ error: 'Not found.' });
+  try { fs.unlinkSync(path.join(portfolioDir, item.filename)); } catch { /* file may already be gone */ }
+  db.prepare('DELETE FROM portfolio WHERE id = ?').run(Number(req.params.id));
+  res.json({ ok: true });
+});
+
+// ─── Hero Background Image Routes ────────────────────────────
+
+// Upload hero background (admin) — auto-resized and compressed via sharp
+app.post('/api/admin/hero-image', requireAuth, heroUpload.single('image'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No image uploaded' });
+  try {
+    const destPath = path.join(dataDir, 'hero-bg.jpg');
+    if (sharp) {
+      await sharp(req.file.buffer)
+        .resize({ width: 1920, height: 1080, fit: 'inside', withoutEnlargement: true })
+        .jpeg({ quality: 82, progressive: true })
+        .toFile(destPath);
+    } else {
+      // sharp not available — save original buffer directly
+      fs.writeFileSync(destPath, req.file.buffer);
+    }
+    const content = readContent();
+    if (!content.hero) content.hero = {};
+    content.hero.backgroundUrl = `/hero-bg.jpg?v=${Date.now()}`;
+    writeContent(content);
+    res.json({ ok: true, url: content.hero.backgroundUrl });
+  } catch (err) {
+    console.error('Hero image processing error:', err);
+    res.status(500).json({ error: 'Image processing failed' });
+  }
+});
+
+// Reset hero background to default (admin)
+app.delete('/api/admin/hero-image', requireAuth, (_req, res) => {
+  const heroFile = path.join(dataDir, 'hero-bg.jpg');
+  if (fs.existsSync(heroFile)) {
+    try { fs.unlinkSync(heroFile); } catch { /* ignore */ }
+  }
+  const content = readContent();
+  if (content.hero) content.hero.backgroundUrl = '/background.jpg';
+  writeContent(content);
+  res.json({ ok: true });
+});
+
 // ─── Email ───────────────────────────────────────────────────
 
 async function sendEmailNotification(name, phone, message) {
   const { Resend } = require('resend');
   const resend = new Resend(RESEND_API_KEY);
   await resend.emails.send({
-    from: 'Crystal Vision Co. <quotes@crystalvisionco.com>',
+    from: 'Crystal Vision Co. <quotes@crystalvisionusa.com>',
     to: [OWNER_EMAIL],
     subject: `New Quote Request from ${name}`,
     html: `

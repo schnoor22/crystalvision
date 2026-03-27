@@ -14,8 +14,8 @@ WORKDIR /app
 # Copy manifest first so Docker caches the npm install layer separately
 COPY package.json package-lock.json ./
 
-# Install production dependencies (compiles better-sqlite3 natively)
-RUN npm ci --omit=dev
+# Install production dependencies (compiles better-sqlite3 and sharp natively)
+RUN npm install --omit=dev --no-audit
 
 # Copy application source
 COPY server.js ./

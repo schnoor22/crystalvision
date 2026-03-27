@@ -5,6 +5,8 @@
  * and success/error states.
  */
 
+import { closeModal } from './modals.js';
+
 export function initForm() {
   const form = document.getElementById('quote-form');
   if (!form) return;
@@ -92,17 +94,21 @@ function showSuccess(form, successDiv) {
     successDiv.style.display = 'block';
   }
 
-  // Reset after 3 seconds
+  // Close modal after a moment then reset the form for next time
   setTimeout(() => {
-    form.reset();
-    fields.forEach((el) => {
-      el.style.display = '';
-    });
-    if (successDiv) {
-      successDiv.classList.add('hidden');
-      successDiv.style.display = '';
-    }
-  }, 3000);
+    closeModal();
+    // Reset form state after modal close animation finishes
+    setTimeout(() => {
+      form.reset();
+      fields.forEach((el) => {
+        el.style.display = '';
+      });
+      if (successDiv) {
+        successDiv.classList.add('hidden');
+        successDiv.style.display = '';
+      }
+    }, 400);
+  }, 2000);
 }
 
 function formatPhoneNumber(e) {

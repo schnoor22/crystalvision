@@ -256,20 +256,21 @@ function renderWipeFrame(progress, yTop, yBot, rightward, bladeW, passIdx) {
 
   // 1. All passes above are fully cleared
   if (yTop > 0) {
-    ctx.fillRect(0, 0, w, yTop + 8);
+    ctx.fillRect(0, 0, w, yTop + 16);
   }
 
-  // 2. Current pass � area behind squeegee
+  // 2. Current pass — area behind squeegee (extend through blade width
+  //    so no grime peeks through gaps around the narrow handle pole)
   const travel = w + bladeW;
   const posX = rightward
     ? -bladeW + travel * progress
     : w - travel * progress;
 
   if (rightward) {
-    const eraseW = Math.max(0, posX);
+    const eraseW = Math.max(0, posX + bladeW);
     if (eraseW > 0) ctx.fillRect(0, yTop, eraseW, yBot - yTop);
   } else {
-    const eraseX = posX + bladeW;
+    const eraseX = posX;
     const eraseW = Math.max(0, w - eraseX);
     if (eraseW > 0) ctx.fillRect(eraseX, yTop, eraseW, yBot - yTop);
   }

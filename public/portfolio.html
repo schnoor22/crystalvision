@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Our Work — Crystal Vision Co.</title>
+  <meta name="description" content="See Crystal Vision Co.'s portfolio of residential and commercial window cleaning and screen repair work." />
+  <link rel="icon" type="image/png" href="/logo.png" />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Satisfy&family=Lexend:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            deep: { 950: '#011627', 900: '#012A4A', 800: '#013A63', 700: '#01497C' },
+            wave: { 600: '#0077B6', 500: '#0096C7', 400: '#00B4D8', 300: '#48CAE4', 200: '#90E0EF' },
+          },
+          fontFamily: {
+            sans: ['Lexend', 'sans-serif'],
+            brand: ['Satisfy', 'cursive'],
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    body { background: #011627; color: #fff; font-family: 'Lexend', sans-serif; min-height: 100vh; }
+
+    /* Nav */
+    .port-nav {
+      position: sticky; top: 0; z-index: 50;
+      background: rgba(1, 22, 39, 0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 0.875rem 0;
+    }
+
+    /* Hero banner */
+    .port-hero {
+      background: linear-gradient(135deg, #012A4A 0%, #013A63 50%, #01497C 100%);
+      padding: 5rem 1.25rem 4rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .port-hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 70% 80% at 50% 50%, rgba(0,180,216,0.12), transparent);
+      pointer-events: none;
+    }
+
+    /* Gallery grid */
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .gallery-card {
+      position: relative;
+      border-radius: 1rem;
+      overflow: hidden;
+      background: #012A4A;
+      border: 1px solid rgba(255,255,255,0.06);
+      aspect-ratio: 4/3;
+      cursor: pointer;
+      transition: transform 0.25s, box-shadow 0.25s;
+    }
+    .gallery-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
+    .gallery-card img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.4s; }
+    .gallery-card:hover img { transform: scale(1.04); }
+
+    .gallery-card .overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(1,22,39,0.85) 0%, transparent 50%);
+      opacity: 0;
+      transition: opacity 0.25s;
+      display: flex; align-items: flex-end; padding: 1.25rem;
+    }
+    .gallery-card:hover .overlay { opacity: 1; }
+
+    /* Lightbox */
+    .lightbox {
+      display: none;
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,0.92);
+      align-items: center; justify-content: center;
+      padding: 1rem;
+    }
+    .lightbox.open { display: flex; }
+    .lightbox img {
+      max-width: 100%; max-height: 90vh;
+      border-radius: 0.75rem;
+      box-shadow: 0 40px 80px rgba(0,0,0,0.8);
+      object-fit: contain;
+    }
+    .lightbox-close {
+      position: absolute; top: 1.25rem; right: 1.25rem;
+      background: rgba(255,255,255,0.1); border: none;
+      width: 2.5rem; height: 2.5rem; border-radius: 50%;
+      color: #fff; font-size: 1.25rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s;
+    }
+    .lightbox-close:hover { background: rgba(255,255,255,0.2); }
+    .lightbox-caption {
+      position: absolute; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
+      color: rgba(255,255,255,0.8); font-size: 0.875rem;
+      background: rgba(0,0,0,0.5); padding: 0.5rem 1rem; border-radius: 2rem;
+      white-space: nowrap;
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center; padding: 5rem 1rem; color: rgba(255,255,255,0.4);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="port-nav">
+    <div class="max-w-7xl mx-auto px-5 sm:px-8 flex items-center justify-between">
+      <a href="/" class="flex items-center gap-3">
+        <img src="/logo.png" alt="Crystal Vision Co." class="h-10 w-10 rounded-full" />
+        <span class="font-brand text-xl text-white">Crystal Vision Co.</span>
+      </a>
+      <div class="flex items-center gap-6">
+        <a href="/" class="text-white/70 hover:text-white text-sm transition">Home</a>
+        <a href="/#services" class="text-white/70 hover:text-white text-sm transition">Services</a>
+        <a href="/#hero" class="px-4 py-2 rounded-full text-sm font-semibold text-deep-950 transition" style="background:#00B4D8;">Get a Quote</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO BANNER -->
+  <div class="port-hero">
+    <div class="relative z-10">
+      <p class="text-wave-300 text-sm font-semibold uppercase tracking-widest mb-3">Our Work</p>
+      <h1 class="text-4xl sm:text-5xl font-extrabold text-white tracking-tight mb-4">Crystal Clear Results</h1>
+      <p class="text-white/60 text-lg max-w-xl mx-auto leading-relaxed">
+        A look at the homes and businesses we've transformed — one streak-free window at a time.
+      </p>
+    </div>
+  </div>
+
+  <!-- GALLERY -->
+  <main class="max-w-7xl mx-auto px-5 sm:px-8 py-16">
+    <div id="gallery-grid" class="gallery-grid">
+      <!-- Injected by JS -->
+    </div>
+    <div id="empty-state" class="empty-state hidden">
+      <p class="text-2xl mb-2">📷</p>
+      <p class="text-lg font-medium text-white/50">Portfolio coming soon</p>
+      <p class="text-sm text-white/30 mt-1">Check back soon to see our latest work.</p>
+    </div>
+    <div id="loading-state" class="empty-state">
+      <p class="text-white/30 text-sm">Loading portfolio…</p>
+    </div>
+  </main>
+
+  <!-- CTA -->
+  <section class="text-center py-20 px-5" style="background: linear-gradient(135deg, #012A4A, #013A63);">
+    <h2 class="text-3xl font-extrabold text-white mb-3">Ready for windows this clean?</h2>
+    <p class="text-white/60 mb-8">Get a free, no-pressure quote in minutes.</p>
+    <a href="/#hero" class="inline-flex items-center gap-2 px-8 py-3.5 rounded-full font-semibold text-deep-950 text-lg transition hover:opacity-90" style="background:#00B4D8;">
+      Get Your Free Quote →
+    </a>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="py-8 text-center border-t" style="border-color:rgba(255,255,255,0.06); background:#011627;">
+    <p class="text-white/20 text-xs">&copy; <span id="footer-year"></span> Crystal Vision Co. All rights reserved.</p>
+  </footer>
+
+  <!-- LIGHTBOX -->
+  <div id="lightbox" class="lightbox" role="dialog" aria-modal="true">
+    <button class="lightbox-close" id="lightbox-close" aria-label="Close">&times;</button>
+    <img id="lightbox-img" src="" alt="" />
+    <p id="lightbox-caption" class="lightbox-caption"></p>
+  </div>
+
+  <script>
+    document.getElementById('footer-year').textContent = new Date().getFullYear();
+
+    // ── Load portfolio ──────────────────────────────────
+    async function loadPortfolio() {
+      const grid     = document.getElementById('gallery-grid');
+      const empty    = document.getElementById('empty-state');
+      const loading  = document.getElementById('loading-state');
+
+      try {
+        const res   = await fetch('/api/portfolio');
+        const items = await res.json();
+        loading.classList.add('hidden');
+
+        if (!items.length) { empty.classList.remove('hidden'); return; }
+
+        grid.innerHTML = items.map(item => `
+          <div class="gallery-card" data-src="/portfolio-images/${encodeURIComponent(item.filename)}" data-caption="${escAttr(item.caption)}">
+            <img src="/portfolio-images/${encodeURIComponent(item.filename)}" alt="${escAttr(item.caption) || 'Portfolio photo'}" loading="lazy" />
+            <div class="overlay">
+              ${item.caption ? `<p class="text-white text-sm font-medium leading-snug">${escHtml(item.caption)}</p>` : ''}
+            </div>
+          </div>
+        `).join('');
+
+        grid.querySelectorAll('.gallery-card').forEach(card => {
+          card.addEventListener('click', () => openLightbox(card.dataset.src, card.dataset.caption));
+        });
+      } catch {
+        loading.innerHTML = '<p class="text-red-400 text-sm">Could not load portfolio.</p>';
+      }
+    }
+
+    // ── Lightbox ────────────────────────────────────────
+    const lightbox = document.getElementById('lightbox');
+    const lbImg    = document.getElementById('lightbox-img');
+    const lbCap    = document.getElementById('lightbox-caption');
+
+    function openLightbox(src, caption) {
+      lbImg.src = src;
+      lbImg.alt = caption || 'Portfolio photo';
+      lbCap.textContent = caption || '';
+      lbCap.style.display = caption ? 'block' : 'none';
+      lightbox.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeLightbox() {
+      lightbox.classList.remove('open');
+      lbImg.src = '';
+      document.body.style.overflow = '';
+    }
+
+    document.getElementById('lightbox-close').addEventListener('click', closeLightbox);
+    lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLightbox(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeLightbox(); });
+
+    // ── Helpers ─────────────────────────────────────────
+    function escHtml(s) {
+      return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+    function escAttr(s) {
+      return String(s || '').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }
+
+    loadPortfolio();
+  </script>
+</body>
+</html>

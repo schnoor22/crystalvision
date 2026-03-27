@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 
     <!-- SEO -->
     <title>Crystal Vision Co. &mdash; Professional Window Cleaning</title>
@@ -13,12 +13,13 @@
     <meta property="og:description" content="Let the sunshine back in. Professional window cleaning &amp; screen repair." />
     <meta property="og:type" content="website" />
     <meta property="og:image" content="/og-image.jpg" />
+    <meta property="og:url" content="https://crystalvisionusa.com/" />
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="/logo.png" />
 
     <!-- Preload critical assets -->
-    <link rel="preload" href="/hero-clean.jpg" as="image" />
+    <link rel="preload" href="/background.jpg" as="image" />
   </head>
   <body class="no-scroll">
 
@@ -44,6 +45,11 @@
           <a href="#hero" class="nav-link">Home</a>
           <a href="#about" class="nav-link">About</a>
           <a href="#services" class="nav-link">Services</a>
+          <a href="/portfolio.html" class="nav-link">Portfolio</a>
+          <a href="tel:+15035454706" data-content-href="business.phoneUrl" class="nav-link flex items-center gap-1.5">
+            <i class="ph ph-phone" style="font-size:1rem;"></i>
+            <span data-content-key="business.phone">(503) 545-4706</span>
+          </a>
           <button data-modal="quote" class="nav-cta">
             <i class="ph-bold ph-chat-circle-dots" style="font-size: 1rem;"></i>
             Get a Quote
@@ -71,6 +77,11 @@
         <a href="#hero" class="mobile-link text-white/80 hover:text-white text-lg font-medium py-2 transition">Home</a>
         <a href="#about" class="mobile-link text-white/80 hover:text-white text-lg font-medium py-2 transition">About</a>
         <a href="#services" class="mobile-link text-white/80 hover:text-white text-lg font-medium py-2 transition">Services</a>
+        <a href="/portfolio.html" class="mobile-link text-white/80 hover:text-white text-lg font-medium py-2 transition">Portfolio</a>
+        <a href="tel:+15035454706" data-content-href="business.phoneUrl" class="mobile-link text-white/80 hover:text-white text-lg font-medium py-2 transition flex items-center gap-2">
+          <i class="ph ph-phone"></i>
+          <span data-content-key="business.phone">(503) 545-4706</span>
+        </a>
       </div>
       <button data-modal="quote" class="nav-cta mt-auto justify-center text-base py-3">
         <i class="ph-bold ph-chat-circle-dots" style="font-size: 1.125rem;"></i>
@@ -80,7 +91,7 @@
 
     <!-- HERO SECTION -->
     <section id="hero" class="hero">
-      <div class="hero-bg" style="background-image: url('/hero-clean.jpg');"></div>
+      <div class="hero-bg" style="background-image: url('/background.jpg');" data-content-bgurl="hero.backgroundUrl"></div>
       <div class="hero-overlay"></div>
 
       <div class="hero-content">
@@ -224,55 +235,75 @@
     <!-- Wave Divider: Services to CTA (animated) -->
     <div class="cta-wave-wrap" aria-hidden="true">
       <svg class="cta-wave-svg" viewBox="0 0 2880 130" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-        <path class="cta-wave-back" d="M0,80 C240,30 480,110 720,65 C960,20 1200,100 1440,55 C1680,10 1920,95 2160,55 C2400,15 2640,90 2880,55 L2880,130 L0,130 Z"/>
-        <path class="cta-wave-front" d="M0,95 C200,55 400,120 600,80 C800,40 1000,115 1200,75 C1400,35 1600,115 1800,75 C2000,35 2200,110 2400,75 C2600,40 2740,100 2880,80 L2880,130 L0,130 Z"/>
+        <!-- Back: first half 0-1440, second half is exact copy offset by 1440 → seamless tile -->
+        <path class="cta-wave-back" d="M0,80 C240,30 480,110 720,65 C960,20 1200,105 1440,80 C1680,30 1920,110 2160,65 C2400,20 2640,105 2880,80 L2880,130 L0,130 Z"/>
+        <!-- Front: same tiling trick, slightly different shape for depth -->
+        <path class="cta-wave-front" d="M0,95 C200,50 460,130 720,90 C980,50 1200,125 1440,95 C1640,50 1900,130 2160,90 C2420,50 2640,125 2880,95 L2880,130 L0,130 Z"/>
       </svg>
     </div>
 
     <!-- BOTTOM CTA -->
-    <section class="cta-banner pt-32 pb-44 sm:pt-44 sm:pb-56 text-center">
+    <section class="cta-banner text-center">
       <div class="section-inner-sm relative z-10 reveal">
-        <h2 class="font-[var(--font-heading)] text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white mb-5 tracking-tight" data-content-key="cta.title">
-          Ready for crystal clear windows?
-        </h2>
-        <p class="text-wave-200 text-lg mb-12 max-w-xl mx-auto leading-relaxed opacity-80" data-content-key="cta.subtitle">
-          Get a free, no-pressure quote in minutes. We'll take it from there.
-        </p>
-        <button data-modal="quote" class="btn-primary">
-          <span>Get Your Free Quote</span>
-          <i class="ph-bold ph-arrow-right"></i>
-        </button>
+        <div class="cta-inner">
+          <h2 class="font-[var(--font-heading)] text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight" data-content-key="cta.title">
+            Ready for crystal clear windows?
+          </h2>
+          <p class="text-wave-200 text-base sm:text-lg max-w-md mx-auto leading-relaxed opacity-80" data-content-key="cta.subtitle">
+            Get a free, no-pressure quote in minutes. We'll take it from there.
+          </p>
+          <button data-modal="quote" class="btn-primary">
+            <span>Get Your Free Quote</span>
+            <i class="ph-bold ph-arrow-right"></i>
+          </button>
+        </div>
       </div>
     </section>
 
     <!-- FOOTER -->
     <footer class="site-footer py-16">
       <div class="section-inner">
-        <div class="flex flex-col md:flex-row items-center justify-between gap-8">
+        <!-- Brand -->
+        <div class="flex flex-col items-center gap-2 mb-8">
           <div class="flex items-center gap-3">
             <img src="/logo.png" alt="Crystal Vision Co." class="h-9 w-9 rounded-full opacity-90" />
-            <div>
-              <span class="font-brand text-white text-xl">Crystal Vision Co.</span>
-              <p class="text-white/30 text-xs">Professional Window Cleaning</p>
-            </div>
+            <span class="font-brand text-white text-xl">Crystal Vision Co.</span>
           </div>
+          <p class="text-white/30 text-xs">Professional Window Cleaning</p>
+        </div>
 
-          <div class="flex items-center gap-6">
-            <a href="#hero" class="footer-link">Home</a>
-            <a href="#about" class="footer-link">About</a>
-            <a href="#services" class="footer-link">Services</a>
-            <a href="https://www.instagram.com/crystalvisionusa/" data-content-href="business.instagramUrl" target="_blank" rel="noopener noreferrer" class="footer-link" aria-label="Instagram">
-              <i class="ph-fill ph-instagram-logo" style="font-size: 1.125rem;"></i>
-            </a>
-          </div>
+        <!-- Nav links -->
+        <nav class="flex flex-wrap justify-center gap-x-6 gap-y-3 mb-8">
+          <a href="#hero" class="footer-link">Home</a>
+          <a href="#about" class="footer-link">About</a>
+          <a href="#services" class="footer-link">Services</a>
+          <a href="/portfolio.html" class="footer-link">Portfolio</a>
+        </nav>
 
+        <!-- Contact row -->
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
+          <a href="tel:+15035454706" data-content-href="business.phoneUrl" class="footer-link flex items-center gap-1.5">
+            <i class="ph ph-phone" style="font-size:1rem;"></i>
+            <span data-content-key="business.phone">(503) 545-4706</span>
+          </a>
+          <a href="mailto:info@crystalvisionusa.com" data-content-href="business.emailUrl" class="footer-link flex items-center gap-1.5">
+            <i class="ph ph-envelope" style="font-size:1rem;"></i>
+            <span data-content-key="business.email">info@crystalvisionusa.com</span>
+          </a>
+          <a href="https://www.instagram.com/crystalvisionusa/" data-content-href="business.instagramUrl" target="_blank" rel="noopener noreferrer" class="footer-link" aria-label="Instagram">
+            <i class="ph-fill ph-instagram-logo" style="font-size: 1.125rem;"></i>
+          </a>
+        </div>
+
+        <!-- Pay Invoice -->
+        <div class="text-center mb-8">
           <a href="#" id="pay-invoice-link" data-content-href="business.payInvoiceUrl" class="footer-link inline-flex items-center gap-2">
             <i class="ph ph-credit-card" style="font-size: 1rem;"></i>
             <span>Pay Invoice</span>
           </a>
         </div>
 
-        <div class="border-t border-white/10 mt-8 pt-8 text-center">
+        <div class="border-t border-white/10 pt-8 text-center">
           <p class="text-white/30 text-xs">
             &copy; <span id="current-year"></span> Crystal Vision Co. All rights reserved.
           </p>
