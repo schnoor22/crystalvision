@@ -139,7 +139,7 @@ async function loadGallery() {
     }
 
     grid.innerHTML = items.map(item => `
-      <a href="/portfolio.html" class="gallery-thumb block overflow-hidden rounded-xl aspect-square bg-slate-100 group">
+      <a href="/gallery.html" class="gallery-thumb block overflow-hidden rounded-xl aspect-square bg-slate-100 group">
         <img
           src="${item.filename}"
           alt="${escHtml(item.caption || 'Window cleaning result')}"
