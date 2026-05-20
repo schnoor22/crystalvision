@@ -206,8 +206,8 @@
         if (!items.length) { empty.classList.remove('hidden'); return; }
 
         grid.innerHTML = items.map(item => `
-          <div class="gallery-card" data-src="/portfolio-images/${encodeURIComponent(item.filename)}" data-caption="${escAttr(item.caption)}">
-            <img src="/portfolio-images/${encodeURIComponent(item.filename)}" alt="${escAttr(item.caption) || 'Portfolio photo'}" loading="lazy" />
+          <div class="gallery-card" data-src="${item.filename}" data-caption="${escAttr(item.caption)}">
+            <img src="${item.filename}" alt="${escAttr(item.caption) || 'Portfolio photo'}" loading="lazy" />
             <div class="overlay">
               ${item.caption ? `<p class="text-white text-sm font-medium leading-snug">${escHtml(item.caption)}</p>` : ''}
             </div>

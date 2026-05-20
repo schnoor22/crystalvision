@@ -1,130 +1,132 @@
+'use strict';
 /**
  * Crystal Vision Co. — API Server
+ * Runs as a Vercel serverless function (api/index.js re-exports this app).
+ * Also works standalone: `node server.js` for local development.
+ *
+ * Database  : Turso (libsql) — set TURSO_DATABASE_URL + TURSO_AUTH_TOKEN
+ *             Local dev fallback: TURSO_DATABASE_URL=file:local.db (no token needed)
+ * Images    : Vercel Blob — BLOB_READ_WRITE_TOKEN is auto-set by Vercel
+ * Email     : Resend — RESEND_API_KEY
  *
  * Public routes:
  *   GET  /api/health
- *   GET  /api/content          — site editable content (JSON)
- *   POST /api/quote            — quote form submission
- *   POST /api/track            — page view tracking
+ *   GET  /api/content
+ *   POST /api/quote
+ *   POST /api/track
+ *   GET  /api/portfolio
  *
  * Admin routes (require Bearer token):
- *   POST /api/admin/login
- *   GET  /api/admin/verify
- *   GET  /api/admin/content
- *   PUT  /api/admin/content
- *   GET  /api/admin/stats
- *   GET  /api/admin/quotes
+ *   POST   /api/admin/login
+ *   GET    /api/admin/verify
+ *   GET    /api/admin/content
+ *   PUT    /api/admin/content
+ *   GET    /api/admin/stats
+ *   GET    /api/admin/quotes
+ *   POST   /api/admin/portfolio
+ *   PATCH  /api/admin/portfolio/:id
+ *   DELETE /api/admin/portfolio/:id
+ *   POST   /api/admin/hero-image
+ *   DELETE /api/admin/hero-image
  */
 
 require('dotenv').config();
 
-const express = require('express');
-const cors    = require('cors');
-const helmet  = require('helmet');
+const express   = require('express');
+const cors      = require('cors');
+const helmet    = require('helmet');
 const rateLimit = require('express-rate-limit');
-const Database  = require('better-sqlite3');
-const path   = require('path');
-const fs     = require('fs');
+const { createClient } = require('@libsql/client');
+const { put, del }     = require('@vercel/blob');
 const crypto = require('crypto');
 const multer = require('multer');
+
 let sharp;
 try { sharp = require('sharp'); } catch { sharp = null; }
 
-// ─── Config ─────────────────────────────────────────────────
+// ─── Config ──────────────────────────────────────────────────
 
 const PORT           = process.env.PORT           || 3000;
 const OWNER_EMAIL    = process.env.OWNER_EMAIL    || 'info@crystalvisionusa.com';
 const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'changeme123';
 
-// ─── Database ───────────────────────────────────────────────
+// ─── Database (Turso / libsql) ────────────────────────────────
 
-const dataDir = path.join(__dirname, 'data');
-if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+const db = createClient({
+  url:       process.env.TURSO_DATABASE_URL || 'file:local.db',
+  authToken: process.env.TURSO_AUTH_TOKEN,
+});
 
-const portfolioDir = path.join(dataDir, 'portfolio');
-if (!fs.existsSync(portfolioDir)) fs.mkdirSync(portfolioDir, { recursive: true });
-
-const db = new Database(path.join(dataDir, 'site.db'));
-
-db.exec(`
-  CREATE TABLE IF NOT EXISTS quotes (
+// Run schema migrations once per cold start (idempotent CREATE IF NOT EXISTS)
+const dbReady = db.batch([
+  `CREATE TABLE IF NOT EXISTS quotes (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
     name       TEXT NOT NULL,
     phone      TEXT NOT NULL,
     message    TEXT,
     ip         TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
-
-  CREATE TABLE IF NOT EXISTS page_views (
+  )`,
+  `CREATE TABLE IF NOT EXISTS page_views (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
     ip         TEXT,
     referrer   TEXT,
     user_agent TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
-
-  CREATE TABLE IF NOT EXISTS portfolio (
+  )`,
+  `CREATE TABLE IF NOT EXISTS portfolio (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
     filename   TEXT NOT NULL,
     caption    TEXT DEFAULT '',
     sort_order INTEGER DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
-`);
+  )`,
+  `CREATE TABLE IF NOT EXISTS settings (
+    key   TEXT PRIMARY KEY,
+    value TEXT
+  )`,
+], 'write').catch(err => console.error('DB init error:', err));
 
-const insertQuote = db.prepare('INSERT INTO quotes (name, phone, message, ip) VALUES (?, ?, ?, ?)');
-const insertView  = db.prepare('INSERT INTO page_views (ip, referrer, user_agent) VALUES (?, ?, ?)');
+// ─── Content (stored in Turso settings table) ─────────────────
 
-// ─── Multer — Portfolio Image Uploads ───────────────────────
+async function readContent() {
+  await dbReady;
+  const result = await db.execute("SELECT value FROM settings WHERE key = 'content'");
+  if (result.rows.length > 0) return JSON.parse(result.rows[0].value);
+  const defaults = getDefaultContent();
+  await writeContent(defaults);
+  return defaults;
+}
 
-const portfolioStorage = multer.diskStorage({
-  destination: portfolioDir,
-  filename: (_req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase().replace(/[^.a-z0-9]/g, '') || '.jpg';
-    cb(null, `${Date.now()}-${crypto.randomBytes(6).toString('hex')}${ext}`);
-  },
-});
+async function writeContent(data) {
+  await dbReady;
+  await db.execute({
+    sql:  "INSERT OR REPLACE INTO settings (key, value) VALUES ('content', ?)",
+    args: [JSON.stringify(data)],
+  });
+}
+
+// ─── Multer (memory storage only — no persistent disk on Vercel) ──
+// Vercel free tier enforces a 4.5 MB request body limit.
 
 const upload = multer({
-  storage: portfolioStorage,
-  limits: { fileSize: 15 * 1024 * 1024 },
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 4 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     if (/^image\/(jpeg|png|webp|gif)$/.test(file.mimetype)) cb(null, true);
     else cb(new Error('Images only (jpeg, png, webp, gif)'));
   },
 });
 
-// ─── Multer — Hero Background Image ──────────────────────────
-
-// Stored in memory so sharp can process before writing to disk
 const heroUpload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 20 * 1024 * 1024 },
+  limits: { fileSize: 4 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     if (/^image\/(jpeg|png|webp)$/.test(file.mimetype)) cb(null, true);
     else cb(new Error('Images only (jpeg, png, webp)'));
   },
 });
-
-// ─── Content File ────────────────────────────────────────────
-
-const CONTENT_FILE = path.join(dataDir, 'content.json');
-
-function readContent() {
-  try {
-    return JSON.parse(fs.readFileSync(CONTENT_FILE, 'utf8'));
-  } catch {
-    const defaults = getDefaultContent();
-    fs.writeFileSync(CONTENT_FILE, JSON.stringify(defaults, null, 2), 'utf8');
-    return defaults;
-  }
-}
-
-function writeContent(data) {
-  fs.writeFileSync(CONTENT_FILE, JSON.stringify(data, null, 2), 'utf8');
-}
 
 function getDefaultContent() {
   return {
@@ -215,6 +217,9 @@ app.use(cors({ origin: process.env.ALLOWED_ORIGIN || '*' }));
 app.use(express.json({ limit: '200kb' }));
 
 // Rate limiters
+// Rate limiters
+// NOTE: In-memory state resets per serverless cold start.
+// For strict enforcement swap the store for Upstash Redis.
 const quoteLimiter = rateLimit({ windowMs: 3_600_000, max: 5,  message: { error: 'Too many quote requests. Please try again later.' } });
 const loginLimiter = rateLimit({ windowMs:   900_000, max: 10, message: { error: 'Too many login attempts. Please wait.' } });
 const trackLimiter = rateLimit({ windowMs:    60_000, max: 30, message: { error: 'Too many tracking requests.' } });
@@ -225,23 +230,35 @@ app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Serve editable site content
-app.get('/api/content', (_req, res) => {
-  res.json(readContent());
+app.get('/api/content', async (_req, res) => {
+  try {
+    res.json(await readContent());
+  } catch (err) {
+    console.error('Content read error:', err);
+    res.status(500).json({ error: 'Failed to load content.' });
+  }
 });
 
-// Track a page view
-app.post('/api/track', trackLimiter, (req, res) => {
-  const ip       = (req.headers['x-forwarded-for'] || req.ip || '').split(',')[0].trim().substring(0, 100);
-  const referrer = (req.body?.referrer   || '').substring(0, 500);
-  const ua       = (req.body?.userAgent  || '').substring(0, 300);
-  insertView.run(ip, referrer, ua);
-  res.json({ ok: true });
+app.post('/api/track', trackLimiter, async (req, res) => {
+  try {
+    await dbReady;
+    const ip       = (req.headers['x-forwarded-for'] || req.ip || '').split(',')[0].trim().substring(0, 100);
+    const referrer = (req.body?.referrer  || '').substring(0, 500);
+    const ua       = (req.body?.userAgent || '').substring(0, 300);
+    await db.execute({
+      sql:  'INSERT INTO page_views (ip, referrer, user_agent) VALUES (?, ?, ?)',
+      args: [ip, referrer, ua],
+    });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Track error:', err);
+    res.json({ ok: true }); // never block the visitor
+  }
 });
 
-// Quote submission
 app.post('/api/quote', quoteLimiter, async (req, res) => {
   try {
+    await dbReady;
     const { name, phone, message } = req.body;
 
     if (!name || typeof name !== 'string' || !name.trim())
@@ -254,7 +271,10 @@ app.post('/api/quote', quoteLimiter, async (req, res) => {
     const cleanMessage = (message || '').trim().substring(0, 2000);
     const ip           = (req.headers['x-forwarded-for'] || req.ip || '').split(',')[0].trim();
 
-    const result = insertQuote.run(cleanName, cleanPhone, cleanMessage, ip);
+    const result = await db.execute({
+      sql:  'INSERT INTO quotes (name, phone, message, ip) VALUES (?, ?, ?, ?)',
+      args: [cleanName, cleanPhone, cleanMessage, ip],
+    });
 
     if (RESEND_API_KEY) {
       sendEmailNotification(cleanName, cleanPhone, cleanMessage).catch(e =>
@@ -264,7 +284,7 @@ app.post('/api/quote', quoteLimiter, async (req, res) => {
       console.log(`[QUOTE] ${cleanName} (${cleanPhone}): ${cleanMessage || '(no message)'}`);
     }
 
-    res.json({ success: true, message: "Quote request received! We'll be in touch shortly.", id: result.lastInsertRowid });
+    res.json({ success: true, message: "Quote request received! We'll be in touch shortly.", id: Number(result.lastInsertRowid) });
   } catch (err) {
     console.error('Quote error:', err);
     res.status(500).json({ error: 'Something went wrong. Please try again.' });
@@ -273,7 +293,6 @@ app.post('/api/quote', quoteLimiter, async (req, res) => {
 
 // ─── Admin Routes ────────────────────────────────────────────
 
-// Login
 app.post('/api/admin/login', loginLimiter, (req, res) => {
   const { password } = req.body;
   if (!password || password !== ADMIN_PASSWORD)
@@ -281,20 +300,22 @@ app.post('/api/admin/login', loginLimiter, (req, res) => {
   res.json({ token: createToken() });
 });
 
-// Verify token
 app.get('/api/admin/verify', requireAuth, (_req, res) => {
   res.json({ ok: true });
 });
 
-// Get content
-app.get('/api/admin/content', requireAuth, (_req, res) => {
-  res.json(readContent());
+app.get('/api/admin/content', requireAuth, async (_req, res) => {
+  try {
+    res.json(await readContent());
+  } catch (err) {
+    console.error('Content read error:', err);
+    res.status(500).json({ error: 'Failed to load content.' });
+  }
 });
 
-// Update content
-app.put('/api/admin/content', requireAuth, (req, res) => {
+app.put('/api/admin/content', requireAuth, async (req, res) => {
   try {
-    writeContent(req.body);
+    await writeContent(req.body);
     res.json({ ok: true });
   } catch (err) {
     console.error('Content save error:', err);
@@ -302,121 +323,175 @@ app.put('/api/admin/content', requireAuth, (req, res) => {
   }
 });
 
-// Stats dashboard
-app.get('/api/admin/stats', requireAuth, (_req, res) => {
-  const stats = {
-    views30d:          db.prepare(`SELECT COUNT(*) as n      FROM page_views WHERE created_at >= datetime('now', '-30 days')`).get().n,
-    viewsToday:        db.prepare(`SELECT COUNT(*) as n      FROM page_views WHERE date(created_at) = date('now')`).get().n,
-    uniqueVisitors30d: db.prepare(`SELECT COUNT(DISTINCT ip) as n FROM page_views WHERE created_at >= datetime('now', '-30 days')`).get().n,
-    totalQuotes:       db.prepare(`SELECT COUNT(*) as n      FROM quotes`).get().n,
-    quotesThisWeek:    db.prepare(`SELECT COUNT(*) as n      FROM quotes WHERE created_at >= datetime('now', '-7 days')`).get().n,
-    dailyViews:        db.prepare(`
-      SELECT date(created_at) as day, COUNT(*) as views
-      FROM page_views
-      WHERE created_at >= datetime('now', '-30 days')
-      GROUP BY day ORDER BY day
-    `).all(),
-    topReferrers: db.prepare(`
-      SELECT referrer, COUNT(*) as count
-      FROM page_views
-      WHERE referrer != ''
-        AND referrer NOT LIKE '%crystalvision%'
-        AND referrer NOT LIKE '%localhost%'
-        AND created_at >= datetime('now', '-30 days')
-      GROUP BY referrer ORDER BY count DESC LIMIT 8
-    `).all(),
-    recentQuotes: db.prepare(`
-      SELECT id, name, phone, message, created_at
-      FROM quotes ORDER BY created_at DESC LIMIT 5
-    `).all(),
-  };
-  res.json(stats);
+app.get('/api/admin/stats', requireAuth, async (_req, res) => {
+  try {
+    await dbReady;
+    const [
+      views30d, viewsToday, uniqueVisitors30d,
+      totalQuotes, quotesThisWeek,
+      dailyViewsResult, topReferrersResult, recentQuotesResult,
+    ] = await Promise.all([
+      db.execute(`SELECT COUNT(*) as n FROM page_views WHERE created_at >= datetime('now', '-30 days')`),
+      db.execute(`SELECT COUNT(*) as n FROM page_views WHERE date(created_at) = date('now')`),
+      db.execute(`SELECT COUNT(DISTINCT ip) as n FROM page_views WHERE created_at >= datetime('now', '-30 days')`),
+      db.execute(`SELECT COUNT(*) as n FROM quotes`),
+      db.execute(`SELECT COUNT(*) as n FROM quotes WHERE created_at >= datetime('now', '-7 days')`),
+      db.execute(`
+        SELECT date(created_at) as day, COUNT(*) as views
+        FROM page_views
+        WHERE created_at >= datetime('now', '-30 days')
+        GROUP BY day ORDER BY day
+      `),
+      db.execute(`
+        SELECT referrer, COUNT(*) as count
+        FROM page_views
+        WHERE referrer != ''
+          AND referrer NOT LIKE '%crystalvision%'
+          AND referrer NOT LIKE '%localhost%'
+          AND created_at >= datetime('now', '-30 days')
+        GROUP BY referrer ORDER BY count DESC LIMIT 8
+      `),
+      db.execute(`
+        SELECT id, name, phone, message, created_at
+        FROM quotes ORDER BY created_at DESC LIMIT 5
+      `),
+    ]);
+
+    res.json({
+      views30d:          Number(views30d.rows[0]?.n          ?? 0),
+      viewsToday:        Number(viewsToday.rows[0]?.n        ?? 0),
+      uniqueVisitors30d: Number(uniqueVisitors30d.rows[0]?.n ?? 0),
+      totalQuotes:       Number(totalQuotes.rows[0]?.n       ?? 0),
+      quotesThisWeek:    Number(quotesThisWeek.rows[0]?.n    ?? 0),
+      dailyViews:        dailyViewsResult.rows,
+      topReferrers:      topReferrersResult.rows,
+      recentQuotes:      recentQuotesResult.rows,
+    });
+  } catch (err) {
+    console.error('Stats error:', err);
+    res.status(500).json({ error: 'Failed to load stats.' });
+  }
 });
 
-// Full quotes list
-app.get('/api/admin/quotes', requireAuth, (_req, res) => {
-  const quotes = db.prepare(`
-    SELECT id, name, phone, message, created_at
-    FROM quotes ORDER BY created_at DESC LIMIT 200
-  `).all();
-  res.json(quotes);
+app.get('/api/admin/quotes', requireAuth, async (_req, res) => {
+  try {
+    await dbReady;
+    const result = await db.execute(`
+      SELECT id, name, phone, message, created_at
+      FROM quotes ORDER BY created_at DESC LIMIT 200
+    `);
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Quotes error:', err);
+    res.status(500).json({ error: 'Failed to load quotes.' });
+  }
 });
 
 // ─── Portfolio Routes ─────────────────────────────────────────
+// `filename` column stores the full Vercel Blob CDN URL.
 
-// Public portfolio
-app.get('/api/portfolio', (_req, res) => {
-  const items = db.prepare(
-    'SELECT id, filename, caption FROM portfolio ORDER BY sort_order ASC, id DESC'
-  ).all();
-  res.json(items);
+app.get('/api/portfolio', async (_req, res) => {
+  try {
+    await dbReady;
+    const result = await db.execute(
+      'SELECT id, filename, caption FROM portfolio ORDER BY sort_order ASC, id DESC'
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Portfolio error:', err);
+    res.status(500).json({ error: 'Failed to load portfolio.' });
+  }
 });
 
-// Upload portfolio image (admin)
-app.post('/api/admin/portfolio', requireAuth, upload.single('image'), (req, res) => {
+app.post('/api/admin/portfolio', requireAuth, upload.single('image'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No image uploaded.' });
-  const caption    = (req.body.caption    || '').substring(0, 200);
-  const sort_order = parseInt(req.body.sort_order) || 0;
-  const result = db.prepare(
-    'INSERT INTO portfolio (filename, caption, sort_order) VALUES (?, ?, ?)'
-  ).run(req.file.filename, caption, sort_order);
-  res.json({ ok: true, id: result.lastInsertRowid, filename: req.file.filename });
+  try {
+    await dbReady;
+    const ext      = (req.file.originalname.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const blobName = `portfolio/${Date.now()}-${crypto.randomBytes(6).toString('hex')}.${ext}`;
+    const { url }  = await put(blobName, req.file.buffer, { access: 'public', contentType: req.file.mimetype });
+    const caption    = (req.body.caption    || '').substring(0, 200);
+    const sort_order = parseInt(req.body.sort_order) || 0;
+    const result = await db.execute({
+      sql:  'INSERT INTO portfolio (filename, caption, sort_order) VALUES (?, ?, ?)',
+      args: [url, caption, sort_order],
+    });
+    res.json({ ok: true, id: Number(result.lastInsertRowid), filename: url });
+  } catch (err) {
+    console.error('Portfolio upload error:', err);
+    res.status(500).json({ error: 'Upload failed.' });
+  }
 });
 
-// Update caption / sort order (admin)
-app.patch('/api/admin/portfolio/:id', requireAuth, (req, res) => {
-  const { caption = '', sort_order = 0 } = req.body;
-  db.prepare('UPDATE portfolio SET caption = ?, sort_order = ? WHERE id = ?')
-    .run(caption.substring(0, 200), parseInt(sort_order) || 0, Number(req.params.id));
-  res.json({ ok: true });
+app.patch('/api/admin/portfolio/:id', requireAuth, async (req, res) => {
+  try {
+    await dbReady;
+    const { caption = '', sort_order = 0 } = req.body;
+    await db.execute({
+      sql:  'UPDATE portfolio SET caption = ?, sort_order = ? WHERE id = ?',
+      args: [caption.substring(0, 200), parseInt(sort_order) || 0, Number(req.params.id)],
+    });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Portfolio update error:', err);
+    res.status(500).json({ error: 'Update failed.' });
+  }
 });
 
-// Delete portfolio image (admin)
-app.delete('/api/admin/portfolio/:id', requireAuth, (req, res) => {
-  const item = db.prepare('SELECT filename FROM portfolio WHERE id = ?').get(Number(req.params.id));
-  if (!item) return res.status(404).json({ error: 'Not found.' });
-  try { fs.unlinkSync(path.join(portfolioDir, item.filename)); } catch { /* file may already be gone */ }
-  db.prepare('DELETE FROM portfolio WHERE id = ?').run(Number(req.params.id));
-  res.json({ ok: true });
+app.delete('/api/admin/portfolio/:id', requireAuth, async (req, res) => {
+  try {
+    await dbReady;
+    const result = await db.execute({
+      sql:  'SELECT filename FROM portfolio WHERE id = ?',
+      args: [Number(req.params.id)],
+    });
+    if (!result.rows.length) return res.status(404).json({ error: 'Not found.' });
+    const blobUrl = result.rows[0].filename;
+    try { await del(blobUrl); } catch { /* blob may already be gone */ }
+    await db.execute({ sql: 'DELETE FROM portfolio WHERE id = ?', args: [Number(req.params.id)] });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Portfolio delete error:', err);
+    res.status(500).json({ error: 'Delete failed.' });
+  }
 });
 
 // ─── Hero Background Image Routes ────────────────────────────
 
-// Upload hero background (admin) — auto-resized and compressed via sharp
 app.post('/api/admin/hero-image', requireAuth, heroUpload.single('image'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No image uploaded' });
   try {
-    const destPath = path.join(dataDir, 'hero-bg.jpg');
+    let imageBuffer = req.file.buffer;
+    let contentType = req.file.mimetype;
     if (sharp) {
-      await sharp(req.file.buffer)
+      imageBuffer = await sharp(req.file.buffer)
         .resize({ width: 1920, height: 1080, fit: 'inside', withoutEnlargement: true })
         .jpeg({ quality: 82, progressive: true })
-        .toFile(destPath);
-    } else {
-      // sharp not available — save original buffer directly
-      fs.writeFileSync(destPath, req.file.buffer);
+        .toBuffer();
+      contentType = 'image/jpeg';
     }
-    const content = readContent();
+    const { url } = await put(`hero-bg-${Date.now()}.jpg`, imageBuffer, { access: 'public', contentType });
+    const content = await readContent();
     if (!content.hero) content.hero = {};
-    content.hero.backgroundUrl = `/hero-bg.jpg?v=${Date.now()}`;
-    writeContent(content);
-    res.json({ ok: true, url: content.hero.backgroundUrl });
+    content.hero.backgroundUrl = url;
+    await writeContent(content);
+    res.json({ ok: true, url });
   } catch (err) {
     console.error('Hero image processing error:', err);
     res.status(500).json({ error: 'Image processing failed' });
   }
 });
 
-// Reset hero background to default (admin)
-app.delete('/api/admin/hero-image', requireAuth, (_req, res) => {
-  const heroFile = path.join(dataDir, 'hero-bg.jpg');
-  if (fs.existsSync(heroFile)) {
-    try { fs.unlinkSync(heroFile); } catch { /* ignore */ }
+app.delete('/api/admin/hero-image', requireAuth, async (_req, res) => {
+  try {
+    const content = await readContent();
+    if (content.hero) content.hero.backgroundUrl = '/background.jpg';
+    await writeContent(content);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Hero image reset error:', err);
+    res.status(500).json({ error: 'Reset failed.' });
   }
-  const content = readContent();
-  if (content.hero) content.hero.backgroundUrl = '/background.jpg';
-  writeContent(content);
-  res.json({ ok: true });
 });
 
 // ─── Email ───────────────────────────────────────────────────
@@ -446,13 +521,17 @@ function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// ─── Start ───────────────────────────────────────────────────
+// ─── Entry Point ─────────────────────────────────────────────
 
-app.listen(PORT, () => {
-  console.log(`\nCrystal Vision API  →  http://localhost:${PORT}`);
-  console.log(`  Admin password: ${ADMIN_PASSWORD === 'changeme123' ? '⚠️  DEFAULT — set ADMIN_PASSWORD in .env' : '✓ set'}`);
-  console.log(`  Email notifications: ${RESEND_API_KEY ? '✓ enabled' : 'disabled (set RESEND_API_KEY)'}\n`);
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`\nCrystal Vision API  →  http://localhost:${PORT}`);
+    console.log(`  Admin password: ${ADMIN_PASSWORD === 'changeme123' ? '⚠️  DEFAULT — set ADMIN_PASSWORD in .env' : '✓ set'}`);
+    console.log(`  Email notifications: ${RESEND_API_KEY ? '✓ enabled' : 'disabled (set RESEND_API_KEY)'}\n`);
+  });
 
-process.on('SIGINT',  () => { db.close(); process.exit(0); });
-process.on('SIGTERM', () => { db.close(); process.exit(0); });
+  process.on('SIGINT',  () => { db.close(); process.exit(0); });
+  process.on('SIGTERM', () => { db.close(); process.exit(0); });
+}
+
+module.exports = app;

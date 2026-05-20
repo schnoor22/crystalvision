@@ -878,7 +878,7 @@ async function loadPortfolio() {
     }
     grid.innerHTML = items.map(item => `
       <div class="relative group rounded-xl overflow-hidden border border-slate-700/50 bg-deep-900" data-id="${item.id}">
-        <img src="/portfolio-images/${encodeURIComponent(item.filename)}" alt="${escAttr(item.caption)}"
+        <img src="${item.filename}" alt="${escAttr(item.caption)}"
           class="w-full aspect-square object-cover" />
         <div class="p-3">
           <input type="text" value="${escAttr(item.caption)}" placeholder="Caption…" maxlength="200"

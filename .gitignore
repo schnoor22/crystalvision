@@ -28,6 +28,9 @@ api/data/
 api/.env
 api/node_modules
 
+# Local migration data (already in Turso + Vercel Blob)
+server-data/
+
 # Deploy artifacts
 api-deploy.tar.gz
 *.tar.gz
