@@ -254,7 +254,7 @@
           <!-- populated by JS -->
         </div>
         <div class="text-center mt-10">
-          <a href="/gallery.html" class="btn-secondary inline-flex">
+          <a href="/gallery.html" style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.75rem 1.75rem;font-weight:600;font-size:0.9rem;color:#012A4A;background:#fff;border:2px solid #012A4A;border-radius:9999px;text-decoration:none;transition:all 0.2s;" onmouseover="this.style.background='#012A4A';this.style.color='#fff'" onmouseout="this.style.background='#fff';this.style.color='#012A4A'">
             <i class="ph ph-images"></i>
             <span>See Full Gallery</span>
           </a>
@@ -557,5 +557,11 @@
 
     <!-- Main Script -->
     <script type="module" src="/src/main.js"></script>
-  </body>
+    <!-- Lightbox -->
+  <div id="lightbox" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.92);align-items:center;justify-content:center;padding:1rem;" onclick="closeLightbox()">
+    <button onclick="closeLightbox()" style="position:absolute;top:1.25rem;right:1.5rem;background:none;border:none;color:#fff;font-size:2rem;cursor:pointer;line-height:1;opacity:0.7;">&times;</button>
+    <img id="lightbox-img" src="" alt="" style="max-width:92vw;max-height:88vh;object-fit:contain;border-radius:0.75rem;box-shadow:0 25px 60px rgba(0,0,0,0.6);" onclick="event.stopPropagation()" />
+  </div>
+
+</body>
 </html>

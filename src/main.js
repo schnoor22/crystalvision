@@ -139,14 +139,17 @@ async function loadGallery() {
     }
 
     grid.innerHTML = items.map(item => `
-      <a href="/gallery.html" class="gallery-thumb block overflow-hidden rounded-xl aspect-square bg-slate-100 group">
+      <button
+        class="gallery-thumb block w-full overflow-hidden rounded-xl aspect-square bg-slate-100 group cursor-zoom-in"
+        onclick="openLightbox('${item.filename.replace(/'/g, "\\'")}', '${(item.caption || '').replace(/'/g, "\\'")}')"
+      >
         <img
           src="${item.filename}"
           alt="${escHtml(item.caption || 'Window cleaning result')}"
           class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           loading="lazy"
         />
-      </a>
+      </button>
     `).join('');
 
     // Let scroll reveal pick up new elements
@@ -265,3 +268,27 @@ function escHtml(str) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#x27;');
 }
+
+// ─── Lightbox ────────────────────────────────────────────────
+
+window.openLightbox = function(src, alt) {
+  const lb = document.getElementById('lightbox');
+  const img = document.getElementById('lightbox-img');
+  if (!lb || !img) return;
+  img.src = src;
+  img.alt = alt || '';
+  lb.style.display = 'flex';
+  document.body.classList.add('no-scroll');
+};
+
+window.closeLightbox = function() {
+  const lb = document.getElementById('lightbox');
+  if (!lb) return;
+  lb.style.display = 'none';
+  document.getElementById('lightbox-img').src = '';
+  document.body.classList.remove('no-scroll');
+};
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') window.closeLightbox?.();
+});
