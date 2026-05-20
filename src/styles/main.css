@@ -428,6 +428,32 @@ h1, h2, h3, h4 { font-family: var(--font-heading); line-height: 1.15; }
   border-color: rgba(255, 255, 255, 0.4);
 }
 
+/* Outline CTA (for light backgrounds) */
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.875rem 2rem;
+  font-family: var(--font-heading);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--color-ocean-900);
+  background: #fff;
+  border: 2px solid var(--color-ocean-900);
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  text-decoration: none;
+  box-shadow: 0 2px 12px rgba(1, 42, 74, 0.08);
+}
+
+.btn-outline:hover {
+  background: var(--color-ocean-900);
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(1, 42, 74, 0.18);
+}
+
 /* Scroll hint */
 .scroll-hint {
   position: absolute;
