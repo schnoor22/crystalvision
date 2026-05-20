@@ -65,6 +65,8 @@ const dbReady = db.batch([
     name       TEXT NOT NULL,
     phone      TEXT NOT NULL,
     message    TEXT,
+    address    TEXT DEFAULT '',
+    source     TEXT DEFAULT '',
     ip         TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )`,
@@ -80,6 +82,7 @@ const dbReady = db.batch([
     filename   TEXT NOT NULL,
     caption    TEXT DEFAULT '',
     sort_order INTEGER DEFAULT 0,
+    featured   INTEGER DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )`,
   `CREATE TABLE IF NOT EXISTS settings (
@@ -87,6 +90,13 @@ const dbReady = db.batch([
     value TEXT
   )`,
 ], 'write').catch(err => console.error('DB init error:', err));
+
+// Migrate existing tables (ALTER TABLE silently ignored if column already exists)
+const dbMigrations = dbReady.then(() => Promise.all([
+  db.execute('ALTER TABLE quotes ADD COLUMN address TEXT DEFAULT ""').catch(() => {}),
+  db.execute('ALTER TABLE quotes ADD COLUMN source  TEXT DEFAULT ""').catch(() => {}),
+  db.execute('ALTER TABLE portfolio ADD COLUMN featured INTEGER DEFAULT 0').catch(() => {}),
+])).catch(err => console.error('DB migration error:', err));
 
 // ─── Content (stored in Turso settings table) ─────────────────
 
@@ -258,8 +268,8 @@ app.post('/api/track', trackLimiter, async (req, res) => {
 
 app.post('/api/quote', quoteLimiter, async (req, res) => {
   try {
-    await dbReady;
-    const { name, phone, message } = req.body;
+    await dbMigrations;
+    const { name, phone, message, address, source } = req.body;
 
     if (!name || typeof name !== 'string' || !name.trim())
       return res.status(400).json({ error: 'Name is required.' });
@@ -269,15 +279,17 @@ app.post('/api/quote', quoteLimiter, async (req, res) => {
     const cleanName    = name.trim().substring(0, 200);
     const cleanPhone   = phone.trim().substring(0, 30);
     const cleanMessage = (message || '').trim().substring(0, 2000);
+    const cleanAddress = (address || '').trim().substring(0, 300);
+    const cleanSource  = (source  || '').trim().substring(0, 100);
     const ip           = (req.headers['x-forwarded-for'] || req.ip || '').split(',')[0].trim();
 
     const result = await db.execute({
-      sql:  'INSERT INTO quotes (name, phone, message, ip) VALUES (?, ?, ?, ?)',
-      args: [cleanName, cleanPhone, cleanMessage, ip],
+      sql:  'INSERT INTO quotes (name, phone, message, address, source, ip) VALUES (?, ?, ?, ?, ?, ?)',
+      args: [cleanName, cleanPhone, cleanMessage, cleanAddress, cleanSource, ip],
     });
 
     if (RESEND_API_KEY) {
-      sendEmailNotification(cleanName, cleanPhone, cleanMessage).catch(e =>
+      sendEmailNotification(cleanName, cleanPhone, cleanMessage, cleanAddress, cleanSource).catch(e =>
         console.error('Email failed:', e.message)
       );
     } else {
@@ -373,11 +385,42 @@ app.get('/api/admin/stats', requireAuth, async (_req, res) => {
   }
 });
 
+app.get('/api/admin/reviews', requireAuth, async (_req, res) => {
+  try {
+    await dbReady;
+    const result = await db.execute("SELECT value FROM settings WHERE key = 'reviews'");
+    res.json(result.rows.length ? JSON.parse(result.rows[0].value) : []);
+  } catch (err) {
+    console.error('Reviews read error:', err);
+    res.status(500).json({ error: 'Failed to load reviews.' });
+  }
+});
+
+app.put('/api/admin/reviews', requireAuth, async (req, res) => {
+  try {
+    await dbReady;
+    const reviews = (req.body || []).slice(0, 3).map(r => ({
+      name:     (r.name  || '').substring(0, 100),
+      rating:   Math.min(5, Math.max(1, parseInt(r.rating) || 5)),
+      text:     (r.text  || '').substring(0, 1000),
+      date:     (r.date  || '').substring(0, 50),
+    }));
+    await db.execute({
+      sql:  "INSERT OR REPLACE INTO settings (key, value) VALUES ('reviews', ?)",
+      args: [JSON.stringify(reviews)],
+    });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Reviews save error:', err);
+    res.status(500).json({ error: 'Failed to save reviews.' });
+  }
+});
+
 app.get('/api/admin/quotes', requireAuth, async (_req, res) => {
   try {
     await dbReady;
     const result = await db.execute(`
-      SELECT id, name, phone, message, created_at
+      SELECT id, name, phone, message, address, source, created_at
       FROM quotes ORDER BY created_at DESC LIMIT 200
     `);
     res.json(result.rows);
@@ -394,12 +437,44 @@ app.get('/api/portfolio', async (_req, res) => {
   try {
     await dbReady;
     const result = await db.execute(
-      'SELECT id, filename, caption FROM portfolio ORDER BY sort_order ASC, id DESC'
+      'SELECT id, filename, caption, featured FROM portfolio ORDER BY sort_order ASC, id DESC'
     );
     res.json(result.rows);
   } catch (err) {
     console.error('Portfolio error:', err);
     res.status(500).json({ error: 'Failed to load portfolio.' });
+  }
+});
+
+app.get('/api/gallery', async (_req, res) => {
+  try {
+    await dbMigrations;
+    const result = await db.execute(
+      'SELECT id, filename, caption FROM portfolio WHERE featured = 1 ORDER BY sort_order ASC, id DESC LIMIT 10'
+    );
+    // Fall back to first 10 portfolio items if none are marked featured
+    if (result.rows.length === 0) {
+      const fallback = await db.execute(
+        'SELECT id, filename, caption FROM portfolio ORDER BY sort_order ASC, id DESC LIMIT 10'
+      );
+      return res.json(fallback.rows);
+    }
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Gallery error:', err);
+    res.status(500).json({ error: 'Failed to load gallery.' });
+  }
+});
+
+app.get('/api/reviews', async (_req, res) => {
+  try {
+    await dbReady;
+    const result = await db.execute("SELECT value FROM settings WHERE key = 'reviews'");
+    if (!result.rows.length) return res.json([]);
+    res.json(JSON.parse(result.rows[0].value));
+  } catch (err) {
+    console.error('Reviews error:', err);
+    res.status(500).json({ error: 'Failed to load reviews.' });
   }
 });
 
@@ -425,12 +500,19 @@ app.post('/api/admin/portfolio', requireAuth, upload.single('image'), async (req
 
 app.patch('/api/admin/portfolio/:id', requireAuth, async (req, res) => {
   try {
-    await dbReady;
-    const { caption = '', sort_order = 0 } = req.body;
-    await db.execute({
-      sql:  'UPDATE portfolio SET caption = ?, sort_order = ? WHERE id = ?',
-      args: [caption.substring(0, 200), parseInt(sort_order) || 0, Number(req.params.id)],
-    });
+    await dbMigrations;
+    const { caption = '', sort_order = 0, featured } = req.body;
+    if (featured !== undefined) {
+      await db.execute({
+        sql:  'UPDATE portfolio SET caption = ?, sort_order = ?, featured = ? WHERE id = ?',
+        args: [caption.substring(0, 200), parseInt(sort_order) || 0, featured ? 1 : 0, Number(req.params.id)],
+      });
+    } else {
+      await db.execute({
+        sql:  'UPDATE portfolio SET caption = ?, sort_order = ? WHERE id = ?',
+        args: [caption.substring(0, 200), parseInt(sort_order) || 0, Number(req.params.id)],
+      });
+    }
     res.json({ ok: true });
   } catch (err) {
     console.error('Portfolio update error:', err);
@@ -496,7 +578,7 @@ app.delete('/api/admin/hero-image', requireAuth, async (_req, res) => {
 
 // ─── Email ───────────────────────────────────────────────────
 
-async function sendEmailNotification(name, phone, message) {
+async function sendEmailNotification(name, phone, message, address, source) {
   const { Resend } = require('resend');
   const resend = new Resend(RESEND_API_KEY);
   await resend.emails.send({
@@ -509,7 +591,9 @@ async function sendEmailNotification(name, phone, message) {
         <table style="width:100%;border-collapse:collapse">
           <tr><td style="padding:8px 0;font-weight:bold;color:#475569">Name:</td><td>${esc(name)}</td></tr>
           <tr><td style="padding:8px 0;font-weight:bold;color:#475569">Phone:</td><td><a href="tel:${phone}">${esc(phone)}</a></td></tr>
+          ${address ? `<tr><td style="padding:8px 0;font-weight:bold;color:#475569">Address:</td><td>${esc(address)}</td></tr>` : ''}
           ${message ? `<tr><td style="padding:8px 0;font-weight:bold;color:#475569;vertical-align:top">Message:</td><td>${esc(message)}</td></tr>` : ''}
+          ${source ? `<tr><td style="padding:8px 0;font-weight:bold;color:#475569">Heard via:</td><td>${esc(source)}</td></tr>` : ''}
         </table>
         <hr style="border:1px solid #e2e8f0;margin:20px 0"/>
         <p style="color:#94a3b8;font-size:12px">Submitted ${new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles' })} PT</p>

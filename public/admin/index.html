@@ -251,12 +251,14 @@
               <tr class="border-b border-slate-700/60 bg-deep-800/50">
                 <th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-slate-400">Name</th>
                 <th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-slate-400">Phone</th>
+                <th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-slate-400 hidden lg:table-cell">Address</th>
                 <th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-slate-400 hidden md:table-cell">Message</th>
+                <th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-slate-400 hidden xl:table-cell">Source</th>
                 <th class="text-right px-5 py-3 text-xs font-semibold uppercase tracking-wider text-slate-400">Date</th>
               </tr>
             </thead>
             <tbody id="quotes-tbody">
-              <tr><td colspan="4" class="px-5 py-8 text-slate-500 text-xs text-center">Loading…</td></tr>
+              <tr><td colspan="6" class="px-5 py-8 text-slate-500 text-xs text-center">Loading&hellip;</td></tr>
             </tbody>
           </table>
           <div id="quotes-empty" class="hidden px-5 py-12 text-center">
@@ -269,7 +271,7 @@
       <div id="tab-portfolio" class="tab-panel hidden p-8">
         <div class="mb-8">
           <h2 class="text-2xl font-bold text-white">Portfolio</h2>
-          <p class="text-slate-400 text-sm mt-1 font-light">Upload and manage your work photos shown on the Portfolio page</p>
+          <p class="text-slate-400 text-sm mt-1 font-light">Upload photos. Toggle the <strong class="text-wave-300">Gallery</strong> star to feature up to 10 on the home page.</p>
         </div>
 
         <!-- Upload form -->
@@ -296,6 +298,22 @@
         <!-- Photo grid -->
         <div id="portfolio-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           <p class="text-slate-500 text-xs col-span-full">Loading…</p>
+        </div>
+      </div>
+
+      <!-- ── TAB: REVIEWS ─────────────────── -->
+      <div id="tab-reviews" class="tab-panel hidden p-8">
+        <div class="mb-8">
+          <h2 class="text-2xl font-bold text-white">Google Reviews</h2>
+          <p class="text-slate-400 text-sm mt-1 font-light">Choose up to 3 Google reviews to display on the home page</p>
+        </div>
+        <div class="space-y-6 max-w-2xl" id="reviews-editor">
+          <!-- populated by JS -->
+        </div>
+        <div class="mt-6">
+          <button id="save-reviews-btn" class="px-5 py-2 rounded-xl bg-wave-400 hover:bg-wave-500 text-deep-950 font-semibold text-sm transition">
+            Save Reviews
+          </button>
         </div>
       </div>
 
@@ -817,7 +835,7 @@ async function loadQuotes() {
     if (allQuotes.length) badge.textContent = allQuotes.length;
     renderQuotesTable(allQuotes);
   } catch {
-    document.getElementById('quotes-tbody').innerHTML = '<tr><td colspan="4" class="px-5 py-8 text-red-400 text-xs text-center">Failed to load quotes.</td></tr>';
+    document.getElementById('quotes-tbody').innerHTML = '<tr><td colspan="6" class="px-5 py-8 text-red-400 text-xs text-center">Failed to load quotes.</td></tr>';
   }
 }
 
@@ -836,9 +854,11 @@ function renderQuotesTable(quotes) {
       <td class="px-5 py-3.5 text-slate-300">
         <a href="tel:${escAttr(q.phone)}" class="hover:text-wave-300 transition">${escHtml(q.phone)}</a>
       </td>
+      <td class="px-5 py-3.5 text-slate-400 hidden lg:table-cell text-xs">${escHtml(q.address || '—')}</td>
       <td class="px-5 py-3.5 text-slate-400 hidden md:table-cell max-w-xs">
         <span class="line-clamp-2 block text-xs" title="${escAttr(q.message)}">${escHtml(q.message || '—')}</span>
       </td>
+      <td class="px-5 py-3.5 text-slate-400 hidden xl:table-cell text-xs">${escHtml(q.source || '—')}</td>
       <td class="px-5 py-3.5 text-slate-500 text-xs text-right whitespace-nowrap">${formatDate(q.created_at)}</td>
     </tr>
   `).join('');
@@ -849,7 +869,9 @@ document.getElementById('quotes-search').addEventListener('input', (e) => {
   const filtered = allQuotes.filter((r) =>
     (r.name || '').toLowerCase().includes(q) ||
     (r.phone || '').toLowerCase().includes(q) ||
-    (r.message || '').toLowerCase().includes(q)
+    (r.message || '').toLowerCase().includes(q) ||
+    (r.address || '').toLowerCase().includes(q) ||
+    (r.source || '').toLowerCase().includes(q)
   );
   renderQuotesTable(filtered);
 });
@@ -885,12 +907,33 @@ async function loadPortfolio() {
             class="portfolio-caption-input w-full text-xs bg-deep-950 border border-slate-600 rounded-lg px-2 py-1.5 text-white placeholder-slate-500 focus:outline-none focus:border-wave-400 transition"
             data-id="${item.id}" />
           <div class="flex gap-2 mt-2">
+            <button class="portfolio-feat-btn flex-none px-2.5 py-1.5 rounded-lg text-xs font-medium transition ${item.featured ? 'bg-amber-400/20 text-amber-300 border border-amber-400/40' : 'bg-deep-950 text-slate-400 border border-slate-700 hover:border-amber-400/40 hover:text-amber-300'}" data-id="${item.id}" data-featured="${item.featured ? '1' : '0'}" title="Toggle homepage gallery">★</button>
             <button class="portfolio-save-btn flex-1 text-xs py-1.5 rounded-lg bg-wave-400/20 hover:bg-wave-400/30 text-wave-300 font-medium transition" data-id="${item.id}">Save</button>
             <button class="portfolio-delete-btn px-3 py-1.5 rounded-lg bg-red-500/15 hover:bg-red-500/25 text-red-400 text-xs font-medium transition" data-id="${item.id}">Delete</button>
           </div>
         </div>
       </div>
     `).join('');
+
+    grid.querySelectorAll('.portfolio-feat-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.id;
+        const newFeatured = btn.dataset.featured === '0' ? 1 : 0;
+        const caption = grid.querySelector(`.portfolio-caption-input[data-id="${id}"]`).value;
+        const r = await api(`/api/admin/portfolio/${id}`, { method: 'PATCH', body: { caption, sort_order: 0, featured: newFeatured } });
+        if (r.ok) {
+          btn.dataset.featured = String(newFeatured);
+          if (newFeatured) {
+            btn.className = 'portfolio-feat-btn flex-none px-2.5 py-1.5 rounded-lg text-xs font-medium transition bg-amber-400/20 text-amber-300 border border-amber-400/40';
+          } else {
+            btn.className = 'portfolio-feat-btn flex-none px-2.5 py-1.5 rounded-lg text-xs font-medium transition bg-deep-950 text-slate-400 border border-slate-700 hover:border-amber-400/40 hover:text-amber-300';
+          }
+          showToast(newFeatured ? 'Added to homepage gallery ★' : 'Removed from homepage gallery');
+        } else {
+          showToast('Failed to update.', false);
+        }
+      });
+    });
 
     grid.querySelectorAll('.portfolio-save-btn').forEach(btn => {
       btn.addEventListener('click', async () => {
@@ -955,6 +998,86 @@ document.getElementById('portfolio-upload-form').addEventListener('submit', asyn
 // Load portfolio when tab is switched to
 document.querySelectorAll('.tab-btn[data-tab="portfolio"]').forEach(btn => {
   btn.addEventListener('click', loadPortfolio);
+});
+
+// ────────────────────────────
+// Reviews
+// ────────────────────────────
+let currentReviews = [{name:'',rating:5,text:'',date:''},{name:'',rating:5,text:'',date:''},{name:'',rating:5,text:'',date:''}];
+
+function renderReviewsEditor() {
+  const editor = document.getElementById('reviews-editor');
+  if (!editor) return;
+  editor.innerHTML = currentReviews.map((r, i) => `
+    <div class="bg-deep-900 border border-slate-700/50 rounded-2xl p-6">
+      <p class="text-xs font-semibold text-wave-300 uppercase tracking-wider mb-4">Review ${i + 1}</p>
+      <div class="space-y-3">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1">Customer Name</label>
+            <input type="text" maxlength="100" placeholder="Jane D." value="${escAttr(r.name)}"
+              class="review-name w-full text-sm px-3 py-2 rounded-lg bg-deep-950 border border-slate-600 text-white placeholder-slate-500 focus:outline-none focus:border-wave-400 transition"
+              data-idx="${i}" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1">Date</label>
+            <input type="text" maxlength="50" placeholder="May 2025" value="${escAttr(r.date)}"
+              class="review-date w-full text-sm px-3 py-2 rounded-lg bg-deep-950 border border-slate-600 text-white placeholder-slate-500 focus:outline-none focus:border-wave-400 transition"
+              data-idx="${i}" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1">Rating</label>
+          <select class="review-rating text-sm px-3 py-2 rounded-lg bg-deep-950 border border-slate-600 text-white focus:outline-none focus:border-wave-400 transition" data-idx="${i}">
+            ${[5,4,3,2,1].map(n => `<option value="${n}" ${r.rating==n?'selected':''}>${'★'.repeat(n)} (${n})</option>`).join('')}
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1">Review Text</label>
+          <textarea maxlength="1000" rows="3" placeholder="Amazing service! Would highly recommend…"
+            class="review-text w-full text-sm px-3 py-2 rounded-lg bg-deep-950 border border-slate-600 text-white placeholder-slate-500 focus:outline-none focus:border-wave-400 transition resize-none"
+            data-idx="${i}">${escHtml(r.text)}</textarea>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  editor.querySelectorAll('.review-name,.review-date,.review-rating,.review-text').forEach(el => {
+    el.addEventListener('input', () => {
+      const idx = parseInt(el.dataset.idx);
+      const cls = [...el.classList].find(c => c.startsWith('review-')).replace('review-', '');
+      const key = cls === 'text' ? 'text' : cls;
+      currentReviews[idx][key] = el.value;
+    });
+  });
+}
+
+async function loadAdminReviews() {
+  try {
+    const r = await api('/api/admin/reviews');
+    if (!r.ok) throw new Error('failed');
+    const data = await r.json();
+    if (data.length) {
+      currentReviews = [
+        data[0] || {name:'',rating:5,text:'',date:''},
+        data[1] || {name:'',rating:5,text:'',date:''},
+        data[2] || {name:'',rating:5,text:'',date:''},
+      ];
+    }
+    renderReviewsEditor();
+  } catch {
+    showToast('Failed to load reviews.', false);
+  }
+}
+
+document.getElementById('save-reviews-btn')?.addEventListener('click', async () => {
+  const toSave = currentReviews.filter(r => r.name.trim() || r.text.trim());
+  const r = await api('/api/admin/reviews', { method: 'PUT', body: toSave });
+  showToast(r.ok ? 'Reviews saved!' : 'Save failed.', r.ok);
+});
+
+document.querySelectorAll('.tab-btn[data-tab="reviews"]').forEach(btn => {
+  btn.addEventListener('click', loadAdminReviews);
 });
 
 // ────────────────────────────

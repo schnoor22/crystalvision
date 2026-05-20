@@ -28,9 +28,11 @@ async function handleSubmit(e) {
   const successDiv = document.getElementById('quote-success');
 
   // Gather form data
-  const name = form.querySelector('#quote-name').value.trim();
-  const phone = form.querySelector('#quote-phone').value.trim();
+  const name    = form.querySelector('#quote-name').value.trim();
+  const phone   = form.querySelector('#quote-phone').value.trim();
   const message = form.querySelector('#quote-message').value.trim();
+  const address = (form.querySelector('#quote-address')?.value || '').trim();
+  const source  = form.querySelector('#quote-source')?.value || '';
 
   // Basic validation
   if (!name || !phone) {
@@ -60,7 +62,7 @@ async function handleSubmit(e) {
     const response = await fetch('/api/quote', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, phone, message }),
+      body: JSON.stringify({ name, phone, message, address, source }),
     });
 
     if (!response.ok) {
@@ -74,7 +76,7 @@ async function handleSubmit(e) {
     
     // Fallback: show success anyway and store locally
     // (the API might not be set up yet)
-    storeLocally({ name, phone, message, timestamp: new Date().toISOString() });
+    storeLocally({ name, phone, message, address, source, timestamp: new Date().toISOString() });
     showSuccess(form, successDiv);
   } finally {
     submitBtn.disabled = false;
