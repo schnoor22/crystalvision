@@ -989,10 +989,7 @@ html.intro #animation-overlay.playing { animation: none; }
 .brand-flare {
   position: absolute;
   z-index: 0;
-  left: 46.5%;
-  top: -6%;
-  width: 0;
-  height: 0;
+  inset: 0;
   pointer-events: none;
 }
 
@@ -1000,10 +997,10 @@ html.intro #animation-overlay.playing { animation: none; }
 .brand-flare::before {
   content: '';
   position: absolute;
-  left: -6.5rem;
-  top: -2.4rem;
-  width: 13rem;
-  height: 5.6rem;
+  left: -8.5%;
+  top: -96%;
+  width: 110%;
+  height: 210%;
   border-radius: 50%;
   background:
     radial-gradient(circle at 50% 43%, #fff 0 2.5%, rgba(255, 230, 200, 0.95) 4.5%, rgba(247, 151, 111, 0.8) 8%, rgba(232, 69, 60, 0.4) 16%, transparent 30%),
@@ -1017,9 +1014,10 @@ html.intro #animation-overlay.playing { animation: none; }
 .brand-flare::after {
   content: '';
   position: absolute;
-  left: -10rem;
-  top: -0.2rem;
-  width: 20rem;
+  /* kept inside the wordmark's width, centred on the sun */
+  left: 6.5%;
+  top: -8%;
+  width: 80%;
   height: 2px;
   border-radius: 2px;
   background: linear-gradient(90deg, transparent, rgba(232, 69, 60, 0.75) 28%, rgba(255, 215, 185, 1) 50%, rgba(232, 69, 60, 0.75) 72%, transparent);
@@ -1030,7 +1028,7 @@ html.intro #animation-overlay.playing { animation: none; }
 
 @keyframes flare-breathe {
   0%, 100% { opacity: 0.85; transform: scaleX(1); }
-  50%      { opacity: 1;    transform: scaleX(1.12); }
+  50%      { opacity: 1;    transform: scaleX(1.05); }
 }
 
 /* Thin sunrise line along the bottom of the scrolled nav */
@@ -1047,6 +1045,11 @@ html.intro #animation-overlay.playing { animation: none; }
 }
 
 .site-nav.scrolled::after { opacity: 1; }
+
+/* Footer: same flare, no animation */
+.brand-mark--static { display: inline-flex; }
+.brand-mark--static .brand-flare::before,
+.brand-mark--static .brand-flare::after { animation: none; }
 
 @media (prefers-reduced-motion: reduce) {
   .brand-flare::before, .brand-flare::after { animation: none; }
