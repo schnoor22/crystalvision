@@ -1,38 +1,50 @@
-@import url('https://fonts.googleapis.com/css2?family=Satisfy&family=Lexend:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 @import "@phosphor-icons/web/regular/style.css";
 @import "@phosphor-icons/web/bold/style.css";
 @import "@phosphor-icons/web/fill/style.css";
 
 /* ─────────────────────────────────────────────────────────
-   Crystal Vision Co. — Design System
-   Palette derived from logo: ocean wave cyan, deep blue, 
-   foam white, surfboard teal. Zero red.
+   First Light Window Cleaning — Design System
+   Palette taken from the logo: near-black night sky,
+   blue pre-dawn glow, red/orange sun flare.
+   Token names (deep / wave / foam) are kept from the old
+   theme so existing markup keeps working.
    ───────────────────────────────────────────────────────── */
 
 @theme {
-  /* ── Primary: Deep Ocean ── */
-  --color-deep-950: #011627;
-  --color-deep-900: #012A4A;
-  --color-deep-800: #013A63;
-  --color-deep-700: #01497C;
-  --color-deep-600: #014F86;
-  --color-deep-500: #2A6F97;
-  --color-deep-400: #2C7DA0;
+  /* ── Night: the logo's dark background ── */
+  --color-deep-950: #0E0E11;
+  --color-deep-900: #17171B;
+  --color-deep-800: #1F1F24;
+  --color-deep-700: #2A2A31;
+  --color-deep-600: #35353D;
+  --color-deep-500: #4A4A55;
+  --color-deep-400: #6B6B78;
+  --color-ocean-900: #17171B;
 
-  /* ── Secondary: Bright Cyan Wave ── */
-  --color-wave-600: #0077B6;
-  --color-wave-500: #0096C7;
-  --color-wave-400: #00B4D8;
-  --color-wave-300: #48CAE4;
-  --color-wave-200: #90E0EF;
-  --color-wave-100: #ADE8F4;
-  --color-wave-50:  #CAF0F8;
+  /* ── Glow: the blue dawn halo ── */
+  --color-wave-600: #1F5591;
+  --color-wave-500: #2E6CA9;
+  --color-wave-400: #3F82C7;
+  --color-wave-300: #6AA0DC;
+  --color-wave-200: #A3C4EC;
+  --color-wave-100: #CFE0F6;
+  --color-wave-50:  #EDF3FB;
 
-  /* ── Foam / Clean White ── */
-  --color-foam-50:  #F8FDFF;
-  --color-foam-100: #F0FAFF;
-  --color-foam-200: #E0F4FE;
+  /* ── Sun: the flare ── */
+  --color-sun-600: #C8352B;
+  --color-sun-500: #E8453C;
+  --color-sun-400: #F26A3D;
+  --color-sun-300: #F7976F;
+  --color-sun-200: #F6C88E;
+  --color-sun-100: #FDEBDD;
+  --color-sun-50:  #FFF6EF;
+
+  /* ── Daylight: warm off-white surfaces ── */
+  --color-foam-50:  #FBFAF8;
+  --color-foam-100: #F5F3EF;
+  --color-foam-200: #ECE8E2;
 
   /* ── Neutral ── */
   --color-slate-900: #0F172A;
@@ -47,9 +59,8 @@
   --color-slate-50:  #F8FAFC;
 
   /* ── Fonts ── */
-  --font-heading: 'Lexend', system-ui, sans-serif;
-  --font-body: 'Lexend', system-ui, sans-serif;
-  --font-brand: 'Satisfy', cursive;
+  --font-heading: 'Archivo', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
 
   /* ── Animation presets ── */
   --animate-fade-in: fade-in 0.6s ease-out both;
@@ -62,7 +73,8 @@
    Reset & Base
    ───────────────────────────────────────────────────────── */
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+/* Tailwind's preflight already resets margin/padding. A reset here (outside
+   a layer) would silently override every Tailwind spacing utility. */
 
 html {
   scroll-behavior: smooth;
@@ -132,15 +144,43 @@ h1, h2, h3, h4 { font-family: var(--font-heading); line-height: 1.15; }
    ───────────────────────────────────────────────────────── */
 
 #animation-overlay {
+  display: none;
   position: fixed;
   inset: 0;
   z-index: 9999;
+  background: #222222; /* matches the logo artwork's background */
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  cursor: pointer;
 }
 
-#animation-overlay canvas {
-  display: block;
+/* Shown only when the inline head script opts in. If the main script
+   never runs, the overlay fades itself out so the site stays usable. */
+html.intro #animation-overlay {
+  display: flex;
+  animation: intro-failsafe 0.4s ease 5s forwards;
+}
+
+html.intro #animation-overlay.playing { animation: none; }
+
+@keyframes intro-failsafe {
+  to { opacity: 0; visibility: hidden; }
+}
+
+#intro-logo {
+  width: min(92vw, 880px);
+  height: auto;
+  user-select: none;
+  will-change: transform, filter, opacity;
+}
+
+#intro-canvas {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
+  display: block;
 }
 
 #skip-btn {
@@ -155,10 +195,10 @@ h1, h2, h3, h4 { font-family: var(--font-heading); line-height: 1.15; }
   font-family: var(--font-body);
   font-size: 0.8125rem;
   font-weight: 500;
-  color: var(--color-slate-600);
-  background: rgba(255, 255, 255, 0.9);
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 9999px;
   cursor: pointer;
   transition: all 0.2s;
@@ -166,8 +206,8 @@ h1, h2, h3, h4 { font-family: var(--font-heading); line-height: 1.15; }
 }
 
 #skip-btn:hover {
-  background: #fff;
-  color: var(--color-slate-800);
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
 }
 
@@ -182,14 +222,14 @@ h1, h2, h3, h4 { font-family: var(--font-heading); line-height: 1.15; }
   right: 0;
   z-index: 100;
   padding: 1rem 0;
-  background: rgba(1, 22, 39, 0.3);
+  background: rgba(14, 14, 17, 0.3);
   backdrop-filter: blur(4px);
   transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .site-nav.scrolled {
   padding: 0.5rem 0;
-  background: rgba(1, 22, 39, 0.92);
+  background: rgba(14, 14, 17, 0.92);
   backdrop-filter: blur(20px) saturate(1.6);
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.07), 0 8px 32px rgba(0, 0, 0, 0.25);
 }
@@ -215,7 +255,7 @@ h1, h2, h3, h4 { font-family: var(--font-heading); line-height: 1.15; }
   left: 0;
   right: 0;
   height: 2px;
-  background: var(--color-wave-300);
+  background: var(--color-sun-400);
   border-radius: 1px;
   transform: scaleX(0);
   transform-origin: center;
@@ -232,7 +272,7 @@ h1, h2, h3, h4 { font-family: var(--font-heading); line-height: 1.15; }
   font-size: 0.8125rem;
   font-weight: 600;
   color: var(--color-deep-950);
-  background: var(--color-wave-300);
+  background: linear-gradient(135deg, var(--color-sun-400), var(--color-sun-300));
   border: none;
   border-radius: 9999px;
   cursor: pointer;
@@ -241,8 +281,8 @@ h1, h2, h3, h4 { font-family: var(--font-heading); line-height: 1.15; }
 }
 
 .nav-cta:hover {
-  background: var(--color-wave-200);
-  box-shadow: 0 0 20px rgba(72, 202, 228, 0.35);
+  filter: brightness(1.06);
+  box-shadow: 0 0 22px rgba(242, 106, 61, 0.45);
   transform: translateY(-1px);
 }
 
@@ -306,10 +346,10 @@ h1, h2, h3, h4 { font-family: var(--font-heading); line-height: 1.15; }
   inset: 0;
   background: linear-gradient(
     to bottom,
-    rgba(1, 22, 39, 0.75) 0%,
-    rgba(1, 22, 39, 0.45) 40%,
-    rgba(1, 22, 39, 0.55) 70%,
-    rgba(1, 22, 39, 0.8) 100%
+    rgba(14, 14, 17, 0.75) 0%,
+    rgba(14, 14, 17, 0.45) 40%,
+    rgba(14, 14, 17, 0.55) 70%,
+    rgba(14, 14, 17, 0.8) 100%
   );
 }
 
@@ -330,23 +370,18 @@ h1, h2, h3, h4 { font-family: var(--font-heading); line-height: 1.15; }
   text-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
 }
 
-/* "back in" — cyan wave gradient */
+/* "back in" — dawn-blue gradient */
 .hero h1 .text-wave-gradient {
   display: inline;
-  background: linear-gradient(135deg, var(--color-wave-200), var(--color-wave-400));
+  background: linear-gradient(135deg, var(--color-wave-200), var(--color-wave-300));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-/* Brand name script font */
-.font-brand {
-  font-family: 'Satisfy', cursive;
-}
-
-/* "sunshine" — warm golden sun gradient */
+/* "sunshine" — sun flare gradient */
 .text-sunshine {
-  background: linear-gradient(135deg, #FFE566 0%, #FFC200 55%, #FF9800 100%);
+  background: linear-gradient(135deg, #FFE1B0 0%, var(--color-sun-300) 45%, var(--color-sun-400) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -378,12 +413,12 @@ h1, h2, h3, h4 { font-family: var(--font-heading); line-height: 1.15; }
   font-size: 1rem;
   font-weight: 700;
   color: var(--color-deep-950);
-  background: linear-gradient(135deg, var(--color-wave-300) 0%, var(--color-wave-400) 100%);
+  background: linear-gradient(135deg, var(--color-sun-300) 0%, var(--color-sun-400) 100%);
   border: none;
   border-radius: 9999px;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
-  box-shadow: 0 4px 15px rgba(0, 180, 216, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  box-shadow: 0 4px 18px rgba(242, 106, 61, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25);
   position: relative;
   overflow: hidden;
   text-decoration: none;
@@ -391,7 +426,7 @@ h1, h2, h3, h4 { font-family: var(--font-heading); line-height: 1.15; }
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(0, 180, 216, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  box-shadow: 0 8px 32px rgba(242, 106, 61, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 
 .btn-primary::after {
@@ -444,14 +479,14 @@ h1, h2, h3, h4 { font-family: var(--font-heading); line-height: 1.15; }
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
   text-decoration: none;
-  box-shadow: 0 2px 12px rgba(1, 42, 74, 0.08);
+  box-shadow: 0 2px 12px rgba(23, 23, 27, 0.08);
 }
 
 .btn-outline:hover {
   background: var(--color-ocean-900);
   color: #fff;
   transform: translateY(-2px);
-  box-shadow: 0 6px 24px rgba(1, 42, 74, 0.18);
+  box-shadow: 0 6px 24px rgba(23, 23, 27, 0.18);
 }
 
 /* Scroll hint */
@@ -622,14 +657,14 @@ h1, h2, h3, h4 { font-family: var(--font-heading); line-height: 1.15; }
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, var(--color-wave-400), var(--color-wave-200));
+  background: linear-gradient(90deg, var(--color-sun-500), var(--color-sun-300), var(--color-wave-300));
   opacity: 0;
   transition: opacity 0.35s;
 }
 
 .service-card:hover {
   transform: translateY(-6px);
-  box-shadow: 0 20px 60px -15px rgba(0, 150, 199, 0.15);
+  box-shadow: 0 20px 60px -15px rgba(46, 108, 169, 0.18);
   border-color: var(--color-wave-200);
 }
 
@@ -685,7 +720,10 @@ h1, h2, h3, h4 { font-family: var(--font-heading); line-height: 1.15; }
    ───────────────────────────────────────────────────────── */
 
 .cta-banner {
-  background: linear-gradient(135deg, var(--color-deep-900) 0%, var(--color-deep-800) 50%, var(--color-deep-700) 100%);
+  background:
+    radial-gradient(ellipse 70% 90% at 50% 115%, rgba(46, 108, 169, 0.55), transparent 65%),
+    radial-gradient(ellipse 30% 40% at 50% 100%, rgba(232, 69, 60, 0.25), transparent 70%),
+    var(--color-deep-900);
   position: relative;
   overflow: hidden;
   margin-top: -1px;
@@ -714,7 +752,7 @@ h1, h2, h3, h4 { font-family: var(--font-heading); line-height: 1.15; }
   right: -20%;
   width: 60%;
   height: 180%;
-  background: radial-gradient(ellipse, rgba(0, 180, 216, 0.08), transparent 70%);
+  background: radial-gradient(ellipse, rgba(242, 106, 61, 0.14), transparent 70%);
   pointer-events: none;
 }
 
@@ -735,7 +773,7 @@ h1, h2, h3, h4 { font-family: var(--font-heading); line-height: 1.15; }
   transition: color 0.2s;
 }
 
-.footer-link:hover { color: var(--color-wave-300); }
+.footer-link:hover { color: var(--color-sun-300); }
 
 /* ─────────────────────────────────────────────────────────
    Modals
@@ -745,7 +783,7 @@ h1, h2, h3, h4 { font-family: var(--font-heading); line-height: 1.15; }
   position: fixed;
   inset: 0;
   z-index: 1000;
-  background: rgba(1, 22, 39, 0);
+  background: rgba(14, 14, 17, 0);
   backdrop-filter: blur(0px);
   display: flex;
   align-items: center;
@@ -756,7 +794,7 @@ h1, h2, h3, h4 { font-family: var(--font-heading); line-height: 1.15; }
 }
 
 .modal-backdrop.active {
-  background: rgba(1, 22, 39, 0.6);
+  background: rgba(14, 14, 17, 0.6);
   backdrop-filter: blur(8px);
   pointer-events: auto;
 }
@@ -847,7 +885,7 @@ h1, h2, h3, h4 { font-family: var(--font-heading); line-height: 1.15; }
 .form-input:focus {
   background: #fff;
   border-color: var(--color-wave-400);
-  box-shadow: 0 0 0 3px rgba(0, 180, 216, 0.1);
+  box-shadow: 0 0 0 3px rgba(63, 130, 199, 0.15);
 }
 
 .form-submit {
@@ -866,12 +904,12 @@ h1, h2, h3, h4 { font-family: var(--font-heading); line-height: 1.15; }
   border-radius: 0.75rem;
   cursor: pointer;
   transition: all 0.25s;
-  box-shadow: 0 2px 10px rgba(0, 180, 216, 0.25);
+  box-shadow: 0 2px 10px rgba(46, 108, 169, 0.25);
 }
 
 .form-submit:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 20px rgba(0, 180, 216, 0.35);
+  box-shadow: 0 4px 20px rgba(46, 108, 169, 0.35);
 }
 
 .form-submit:disabled {
@@ -926,6 +964,21 @@ h1, h2, h3, h4 { font-family: var(--font-heading); line-height: 1.15; }
 }
 
 /* ─────────────────────────────────────────────────────────
+   Brand
+   ───────────────────────────────────────────────────────── */
+
+.brand-logo {
+  display: block;
+  height: 2.5rem;
+  width: auto;
+  transition: opacity 0.2s, height 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.site-nav.scrolled .brand-logo { height: 2.125rem; }
+
+.brand-logo:hover { opacity: 0.85; }
+
+/* ─────────────────────────────────────────────────────────
    Utility
    ───────────────────────────────────────────────────────── */
 
@@ -940,6 +993,6 @@ h1, h2, h3, h4 { font-family: var(--font-heading); line-height: 1.15; }
   width: 0.5rem;
   height: 0.5rem;
   border-radius: 9999px;
-  background: var(--color-wave-400);
+  background: var(--color-sun-400);
   flex-shrink: 0;
 }

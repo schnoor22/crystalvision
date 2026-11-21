@@ -1,373 +1,315 @@
 /**
- * Crystal Vision Co. � Squeegee Animation (v2)
+ * First Light Window Cleaning — "First Light" intro
  *
- * Dramatically visible dirty-window overlay on a canvas.
- * A realistic squeegee wipes horizontal bands, erasing the
- * grime and revealing the clean site underneath.
+ * The screen starts as fogged glass at dawn. The sun flare from the
+ * logo ignites, its light burns the fog away outward, the wordmark
+ * sharpens, and the overlay dissolves into the site.
  *
- * Key improvements over v1:
- *  - Much darker/denser grime layer so the dirty window is OBVIOUS
- *  - Larger, more visible squeegee with realistic shading
- *  - Soap wash phase has visible bubbles & blue tint
- *  - Proper compositing so wiped areas become fully transparent
- *  - Works with any hero image underneath
+ *  - About 2.3s total, skippable (button, click, any key)
+ *  - Plays once per browser session
+ *  - Never plays with prefers-reduced-motion
+ *  - The page is fully usable without JS (overlay hides itself via CSS)
  */
 
-import { gsap } from "gsap";
+import { gsap } from 'gsap';
 
-// -- Configuration -------------------------------------------
+const SEEN_KEY = 'fl_intro_seen'; // also used by the inline script in index.html
+
+// Sun position inside /logo-full.jpg (1169 x 809), as fractions
+const SUN = { x: 585 / 1169, y: 325 / 809 };
+
 const CFG = {
-  // Timing
-  holdDirty: 1.0,         // seconds showing dirty window before wipe
-  soapFloodDur: 0.5,      // soap wash animation
-  wipePasses: 3,           // horizontal passes
-  wipeSpeed: 0.9,          // seconds per pass
-  passGap: 0.1,            // gap between passes
-  fadeOutDur: 0.4,         // final overlay fadeout
-
-  // Appearance
-  squeegeeW: 300,          // px blade width
-  bladeH: 10,              // px rubber blade thickness
-  handleH: 50,             // px handle length
-  grimeAlpha: 0.7,         // base grime opacity (0-1) � heavy!
-  spotCount: 120,          // hard-water spots
-  smudgeCount: 16,         // greasy smudges
-  dripCount: 12,           // water drips after each pass
+  ignite: 0.7,      // flare grows from a spark to full burst
+  burn: 1.05,       // fog clears outward from the sun
+  hold: 0.35,       // logo fully visible
+  exit: 0.55,       // overlay dissolves into the hero
+  fogScale: 0.5,    // fog is painted at half resolution then upscaled
 };
 
-let canvas, ctx, w, h;
-let tl; // GSAP timeline
-let dirtySnap; // ImageData snapshot of dirty+soap layer
-let skipped = false;
+let canvas, ctx, overlay, logo, fog;
+let w = 0, h = 0, dpr = 1;
+let sun = { x: 0, y: 0 };
+let tl;
+let done = false;
 
-// -- Public API ----------------------------------------------
+// ── Public API ────────────────────────────────────────────
 
+// The decision is made by a tiny inline script in <head> (so returning
+// visitors never see a flash of the overlay). It adds html.intro.
 export function shouldPlayAnimation() {
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false;
-  return true;
+  return document.documentElement.classList.contains('intro');
 }
 
-export function initAnimation() {
-  canvas = document.getElementById("squeegee-canvas");
-  const overlay = document.getElementById("animation-overlay");
-  const skipBtn = document.getElementById("skip-btn");
-  if (!canvas || !overlay) return;
+export async function initAnimation() {
+  overlay = document.getElementById('animation-overlay');
+  canvas = document.getElementById('intro-canvas');
+  logo = document.getElementById('intro-logo');
+  if (!overlay || !canvas || !logo) return removeOverlay();
 
-  ctx = canvas.getContext("2d");
+  try { sessionStorage.setItem(SEEN_KEY, '1'); } catch { /* ignore */ }
+
+  document.body.classList.add('no-scroll');
+  overlay.classList.add('playing');
+
+  const skipBtn = document.getElementById('skip-btn');
+  skipBtn?.addEventListener('click', skip);
+  overlay.addEventListener('click', skip);
+  window.addEventListener('keydown', skip, { once: true });
+
+  // Wait for the logo so the sun lines up with it (give up after 1.5s)
+  try {
+    await Promise.race([
+      logo.decode(),
+      new Promise((_, reject) => setTimeout(reject, 1500)),
+    ]);
+  } catch {
+    return finish();
+  }
+  if (done) return;
+
+  ctx = canvas.getContext('2d');
   resize();
-  window.addEventListener("resize", resize);
+  window.addEventListener('resize', resize);
 
-  // 1. Paint the dirty window
-  paintDirtyWindow();
-  dirtySnap = ctx.getImageData(0, 0, w, h);
-
-  // 2. Build GSAP timeline
-  buildTimeline(overlay, skipBtn);
-
-  // 3. Skip handler
-  if (skipBtn) skipBtn.addEventListener("click", skip);
+  buildTimeline();
 }
 
 export function skip() {
-  if (skipped) return;
-  skipped = true;
-  if (tl) tl.progress(1);
+  if (done) return;
+  if (tl) tl.kill();
   finish();
 }
 
-// -- Canvas Helpers ------------------------------------------
+// ── Layout ────────────────────────────────────────────────
 
 function resize() {
+  dpr = Math.min(window.devicePixelRatio || 1, 2);
   w = window.innerWidth;
   h = window.innerHeight;
-  canvas.width = w;
-  canvas.height = h;
+  canvas.width = Math.round(w * dpr);
+  canvas.height = Math.round(h * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  const r = logo.getBoundingClientRect();
+  sun = { x: r.left + r.width * SUN.x, y: r.top + r.height * SUN.y };
+
+  fog = paintFog(w, h);
 }
 
-// -- Paint Dirty Window --------------------------------------
+// ── Fog (condensation on glass) ───────────────────────────
 
-function paintDirtyWindow() {
-  // 1. Heavy brownish-gray grime fill
-  ctx.fillStyle = `rgba(120, 110, 90, ${CFG.grimeAlpha})`;
-  ctx.fillRect(0, 0, w, h);
+function paintFog(width, height) {
+  const s = CFG.fogScale;
+  const fw = Math.max(1, Math.round(width * s));
+  const fh = Math.max(1, Math.round(height * s));
+  const off = document.createElement('canvas');
+  off.width = fw;
+  off.height = fh;
+  const c = off.getContext('2d');
 
-  // 2. Noise texture
-  addNoise(0.12);
+  // Cool, milky film, a little denser toward the bottom like real condensation
+  const base = c.createLinearGradient(0, 0, 0, fh);
+  base.addColorStop(0, 'rgba(118, 130, 152, 0.86)');
+  base.addColorStop(1, 'rgba(92, 104, 128, 0.92)');
+  c.fillStyle = base;
+  c.fillRect(0, 0, fw, fh);
 
-  // 3. Hard-water spots
-  for (let i = 0; i < CFG.spotCount; i++) {
-    const x = rand(w), y = rand(h), r = 4 + rand(22);
-    const g = ctx.createRadialGradient(x, y, r * 0.2, x, y, r);
-    g.addColorStop(0, "rgba(255,255,255,0)");
-    g.addColorStop(0.5, `rgba(200,195,180,${0.18 + rand(0.18)})`);
-    g.addColorStop(0.85, `rgba(180,175,160,${0.10 + rand(0.10)})`);
-    g.addColorStop(1, "rgba(180,175,160,0)");
-    ctx.fillStyle = g;
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Mineral ring
-    ctx.beginPath();
-    ctx.arc(x, y, r * 0.65, 0, Math.PI * 2);
-    ctx.strokeStyle = `rgba(255,255,255,${0.09 + rand(0.09)})`;
-    ctx.lineWidth = 1 + rand(1.5);
-    ctx.stroke();
-  }
-
-  // 4. Greasy smudges
-  for (let i = 0; i < CFG.smudgeCount; i++) {
-    const x = rand(w), y = rand(h);
-    const rx = 25 + rand(70), ry = 18 + rand(50);
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.rotate(rand(Math.PI));
-    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, rx);
-    g.addColorStop(0, `rgba(170,160,140,${0.15 + rand(0.12)})`);
-    g.addColorStop(1, "rgba(170,160,140,0)");
-    ctx.fillStyle = g;
-    ctx.beginPath();
-    ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-  }
-
-  // 5. Dried drip streaks
-  for (let i = 0; i < 10; i++) {
-    const sx = rand(w), sy = rand(h * 0.3);
-    const length = 60 + rand(180);
-    ctx.beginPath();
-    ctx.moveTo(sx, sy);
-    let cy = sy;
-    while (cy < sy + length) {
-      cy += 6 + rand(12);
-      ctx.lineTo(sx + (Math.random() - 0.5) * 5, cy);
-    }
-    ctx.strokeStyle = `rgba(200,195,180,${0.08 + rand(0.08)})`;
-    ctx.lineWidth = 1.5 + rand(2);
-    ctx.stroke();
-  }
-
-  // 6. Edge vignette (heavier grime at edges)
-  const vg = ctx.createRadialGradient(
-    w / 2, h / 2, Math.min(w, h) * 0.25,
-    w / 2, h / 2, Math.max(w, h) * 0.75
-  );
-  vg.addColorStop(0, "rgba(100,90,70,0)");
-  vg.addColorStop(1, "rgba(100,90,70,0.35)");
-  ctx.fillStyle = vg;
-  ctx.fillRect(0, 0, w, h);
-}
-
-function addNoise(strength) {
-  const img = ctx.getImageData(0, 0, w, h);
+  // Fine grain
+  const img = c.getImageData(0, 0, fw, fh);
   const d = img.data;
   for (let i = 0; i < d.length; i += 4) {
-    const n = (Math.random() - 0.5) * 50;
-    d[i] += n;
-    d[i + 1] += n;
-    d[i + 2] += n;
-    d[i + 3] = Math.min(255, d[i + 3] + rand(strength * 255));
+    const n = (Math.random() - 0.5) * 22;
+    d[i] += n; d[i + 1] += n; d[i + 2] += n;
   }
-  ctx.putImageData(img, 0, 0);
-}
+  c.putImageData(img, 0, 0);
 
-// -- Timeline ------------------------------------------------
-
-function buildTimeline(overlay, skipBtn) {
-  tl = gsap.timeline({ onComplete: finish });
-
-  // Phase 1 � hold the dirty window
-  tl.to({}, { duration: CFG.holdDirty });
-
-  // Phase 2 � soap wash (blue tint + bubbles)
-  tl.call(applySoapWash);
-  tl.to({}, { duration: CFG.soapFloodDur });
-
-  // Phase 3 � squeegee wipe passes
-  const passH = h / CFG.wipePasses;
-  const bladeW = Math.min(CFG.squeegeeW, w * 0.45);
-
-  for (let p = 0; p < CFG.wipePasses; p++) {
-    const yTop = p * passH;
-    const yBot = yTop + passH + 15; // small overlap
-    const rightward = p % 2 === 0;
-    const prog = { v: 0 };
-
-    tl.to(prog, {
-      v: 1,
-      duration: CFG.wipeSpeed,
-      ease: "power2.inOut",
-      onUpdate() {
-        renderWipeFrame(prog.v, yTop, yBot, rightward, bladeW, p);
-      },
-    }, p === 0 ? "+=0" : `+=${CFG.passGap}`);
+  // Droplets: a soft dark body with a bright rim, like beads on a window
+  const count = Math.round((fw * fh) / 900);
+  for (let i = 0; i < count; i++) {
+    const x = Math.random() * fw;
+    const y = Math.random() * fh;
+    const r = 0.6 + Math.random() ** 3 * 5;
+    c.beginPath();
+    c.arc(x, y, r, 0, Math.PI * 2);
+    c.fillStyle = `rgba(60, 70, 88, ${0.10 + Math.random() * 0.12})`;
+    c.fill();
+    c.beginPath();
+    c.arc(x - r * 0.3, y - r * 0.3, r * 0.35, 0, Math.PI * 2);
+    c.fillStyle = 'rgba(220, 230, 245, 0.5)';
+    c.fill();
   }
 
-  // Phase 4 � fade away any residual film
-  tl.to(canvas, { opacity: 0, duration: CFG.fadeOutDur, ease: "power2.out" });
-}
-
-// -- Soap Wash -----------------------------------------------
-
-function applySoapWash() {
-  ctx.putImageData(dirtySnap, 0, 0);
-
-  // Tinted blue film
-  const sg = ctx.createLinearGradient(0, 0, 0, h);
-  sg.addColorStop(0, "rgba(0,150,199,0.3)");
-  sg.addColorStop(0.5, "rgba(72,202,228,0.22)");
-  sg.addColorStop(1, "rgba(0,150,199,0.28)");
-  ctx.fillStyle = sg;
-  ctx.fillRect(0, 0, w, h);
-
-  // Soap bubbles
-  for (let i = 0; i < 40; i++) {
-    const bx = rand(w), by = rand(h), br = 5 + rand(14);
-    const bg = ctx.createRadialGradient(bx - br * 0.3, by - br * 0.3, br * 0.1, bx, by, br);
-    bg.addColorStop(0, "rgba(255,255,255,0.45)");
-    bg.addColorStop(0.6, "rgba(173,232,244,0.18)");
-    bg.addColorStop(1, "rgba(173,232,244,0)");
-    ctx.fillStyle = bg;
-    ctx.beginPath();
-    ctx.arc(bx, by, br, 0, Math.PI * 2);
-    ctx.fill();
-    // Highlight dot
-    ctx.beginPath();
-    ctx.arc(bx - br * 0.25, by - br * 0.25, br * 0.25, 0, Math.PI * 2);
-    ctx.fillStyle = "rgba(255,255,255,0.55)";
-    ctx.fill();
+  // A few clear runs where drops slid down
+  for (let i = 0; i < Math.round(fw / 90); i++) {
+    const x = Math.random() * fw;
+    const y0 = Math.random() * fh * 0.6;
+    const len = fh * (0.15 + Math.random() * 0.35);
+    c.save();
+    c.globalCompositeOperation = 'destination-out';
+    c.strokeStyle = 'rgba(0,0,0,0.22)';
+    c.lineWidth = 1 + Math.random() * 1.6;
+    c.lineCap = 'round';
+    c.beginPath();
+    c.moveTo(x, y0);
+    let yy = y0, xx = x;
+    while (yy < y0 + len) {
+      yy += 4 + Math.random() * 6;
+      xx += (Math.random() - 0.5) * 1.5;
+      c.lineTo(xx, yy);
+    }
+    c.stroke();
+    c.restore();
   }
 
-  // Snapshot WITH soap for wipe compositing
-  dirtySnap = ctx.getImageData(0, 0, w, h);
+  return off;
 }
 
-// -- Wipe Frame ----------------------------------------------
+// ── Frame rendering ───────────────────────────────────────
 
-function renderWipeFrame(progress, yTop, yBot, rightward, bladeW, passIdx) {
-  // Re-stamp dirty snapshot
-  ctx.putImageData(dirtySnap, 0, 0);
+const state = { flare: 0, clear: 0, fogAlpha: 1 };
 
-  // Erase already-wiped regions
+function render() {
+  if (!ctx) return;
+  ctx.clearRect(0, 0, w, h);
+
+  // 1. Fog, with a hole burned outward from the sun
+  if (state.fogAlpha > 0.001) {
+    ctx.globalAlpha = state.fogAlpha;
+    ctx.drawImage(fog, 0, 0, w, h);
+    ctx.globalAlpha = 1;
+
+    if (state.clear > 0) {
+      const maxR = Math.hypot(Math.max(sun.x, w - sun.x), Math.max(sun.y, h - sun.y)) * 1.15;
+      const r = Math.max(1, maxR * state.clear);
+      const g = ctx.createRadialGradient(sun.x, sun.y, 0, sun.x, sun.y, r);
+      g.addColorStop(0, 'rgba(0,0,0,1)');
+      g.addColorStop(0.62, 'rgba(0,0,0,1)');
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.save();
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
+      ctx.restore();
+
+      // Warm light catching the edge of the evaporating fog
+      const rim = ctx.createRadialGradient(sun.x, sun.y, r * 0.55, sun.x, sun.y, r * 1.05);
+      rim.addColorStop(0, 'rgba(247, 151, 111, 0)');
+      rim.addColorStop(0.7, `rgba(247, 151, 111, ${0.6 * state.fogAlpha})`);
+      rim.addColorStop(1, 'rgba(247, 151, 111, 0)');
+      ctx.save();
+      ctx.globalCompositeOperation = 'source-atop';
+      ctx.fillStyle = rim;
+      ctx.fillRect(0, 0, w, h);
+      ctx.restore();
+    }
+  }
+
+  // 2. Sun flare, additive so it glows through the fog
+  if (state.flare > 0.001) drawFlare(sun.x, sun.y, state.flare);
+}
+
+function drawFlare(x, y, k) {
+  const unit = Math.min(w, h);
   ctx.save();
-  ctx.globalCompositeOperation = "destination-out";
-  ctx.fillStyle = "rgba(0,0,0,1)";
+  ctx.globalCompositeOperation = 'lighter';
 
-  // 1. All passes above are fully cleared
-  if (yTop > 0) {
-    ctx.fillRect(0, 0, w, yTop + 16);
-  }
+  // Blue dawn halo
+  halo(x, y + unit * 0.05, unit * 0.55 * (0.6 + 0.4 * k), `rgba(46, 108, 169, ${0.38 * k})`);
 
-  // 2. Current pass — area behind squeegee (extend through blade width
-  //    so no grime peeks through gaps around the narrow handle pole)
-  const travel = w + bladeW;
-  const posX = rightward
-    ? -bladeW + travel * progress
-    : w - travel * progress;
+  // Warm bloom
+  halo(x, y, unit * 0.22 * k, `rgba(232, 69, 60, ${0.55 * k})`);
 
-  if (rightward) {
-    const eraseW = Math.max(0, posX + bladeW);
-    if (eraseW > 0) ctx.fillRect(0, yTop, eraseW, yBot - yTop);
-  } else {
-    const eraseX = posX;
-    const eraseW = Math.max(0, w - eraseX);
-    if (eraseW > 0) ctx.fillRect(eraseX, yTop, eraseW, yBot - yTop);
-  }
-
+  // Horizontal anamorphic streak
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(1, 0.018);
+  halo(0, 0, w * 0.75 * k, `rgba(242, 106, 61, ${0.75 * k})`);
   ctx.restore();
 
-  // Draw squeegee on top (normal compositing)
-  ctx.save();
-  ctx.globalCompositeOperation = "source-over";
-  drawSqueegee(posX, yTop, yBot, bladeW);
+  // Star rays
+  const rays = [
+    [0.38, 0.42], [-0.38, 0.42], [Math.PI - 0.38, 0.42], [Math.PI + 0.38, 0.42],
+    [Math.PI / 2, 0.22], [-Math.PI / 2, 0.26],
+    [1.05, 0.2], [Math.PI - 1.05, 0.2], [-1.1, 0.2], [Math.PI + 1.1, 0.2],
+  ];
+  for (const [a, len] of rays) {
+    const L = unit * len * k;
+    const ex = x + Math.cos(a) * L;
+    const ey = y + Math.sin(a) * L;
+    const g = ctx.createLinearGradient(x, y, ex, ey);
+    g.addColorStop(0, `rgba(255, 170, 120, ${0.7 * k})`);
+    g.addColorStop(1, 'rgba(232, 69, 60, 0)');
+    ctx.strokeStyle = g;
+    ctx.lineWidth = Math.max(1, unit * 0.004);
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(ex, ey);
+    ctx.stroke();
+  }
+
+  // Hot core
+  halo(x, y, unit * 0.06 * (0.5 + 0.5 * k), `rgba(255, 246, 225, ${k})`);
+  halo(x, y, unit * 0.025, `rgba(255, 255, 255, ${k})`);
+
   ctx.restore();
 }
 
-// -- Squeegee Drawing ----------------------------------------
-
-function drawSqueegee(x, yTop, yBot, bladeW) {
-  const midY = yTop + (yBot - yTop) / 2;
-
-  // - Handle pole -
-  const poleW = 10;
-  const poleX = x + bladeW / 2 - poleW / 2;
-  const poleTop = midY - CFG.handleH - CFG.bladeH;
-
-  // Shadow
-  ctx.fillStyle = "rgba(0,0,0,0.12)";
-  roundRect(poleX + 3, poleTop + 3, poleW, CFG.handleH, 3);
-
-  // Pole body (metallic gradient)
-  const pg = ctx.createLinearGradient(poleX, 0, poleX + poleW, 0);
-  pg.addColorStop(0, "#999");
-  pg.addColorStop(0.3, "#ddd");
-  pg.addColorStop(0.5, "#eee");
-  pg.addColorStop(0.7, "#ddd");
-  pg.addColorStop(1, "#999");
-  ctx.fillStyle = pg;
-  roundRect(poleX, poleTop, poleW, CFG.handleH, 3);
-
-  // - T-bar / holder -
-  const holderH = 7;
-  const holderY = midY - holderH - CFG.bladeH;
-  ctx.fillStyle = "#444";
-  roundRect(x, holderY, bladeW, holderH, 2);
-
-  // Highlight line on holder
-  ctx.fillStyle = "rgba(255,255,255,0.12)";
-  ctx.fillRect(x, holderY, bladeW, 1.5);
-
-  // - Rubber blade -
-  const bladeY = midY - CFG.bladeH;
-  const bg = ctx.createLinearGradient(0, bladeY, 0, bladeY + CFG.bladeH);
-  bg.addColorStop(0, "#1a3f5c");
-  bg.addColorStop(1, "#0e2a42");
-  ctx.fillStyle = bg;
-  ctx.fillRect(x, bladeY, bladeW, CFG.bladeH);
-
-  // Water bead along blade edge (bright cyan line)
-  ctx.fillStyle = "rgba(0,180,216,0.55)";
-  ctx.fillRect(x, bladeY + CFG.bladeH, bladeW, 3);
-
-  // Gleam on rubber
-  ctx.fillStyle = "rgba(255,255,255,0.18)";
-  ctx.fillRect(x, bladeY, bladeW, 1.5);
-}
-
-function roundRect(x, y, w2, h2, r) {
+function halo(x, y, r, color) {
+  if (r <= 0) return;
+  const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+  g.addColorStop(0, color);
+  g.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = g;
   ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.lineTo(x + w2 - r, y);
-  ctx.quadraticCurveTo(x + w2, y, x + w2, y + r);
-  ctx.lineTo(x + w2, y + h2 - r);
-  ctx.quadraticCurveTo(x + w2, y + h2, x + w2 - r, y + h2);
-  ctx.lineTo(x + r, y + h2);
-  ctx.quadraticCurveTo(x, y + h2, x, y + h2 - r);
-  ctx.lineTo(x, y + r);
-  ctx.quadraticCurveTo(x, y, x + r, y);
-  ctx.closePath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
   ctx.fill();
 }
 
-// -- Finish --------------------------------------------------
+// ── Timeline ──────────────────────────────────────────────
 
-function finish() {
-  const overlay = document.getElementById("animation-overlay");
-  const skipBtn = document.getElementById("skip-btn");
+function buildTimeline() {
+  gsap.set(logo, { opacity: 0.35, filter: 'blur(10px)', scale: 0.97 });
 
-  if (overlay) {
-    overlay.style.transition = "opacity 0.3s ease";
-    overlay.style.opacity = "0";
-    setTimeout(() => overlay.remove(), 350);
-  }
-  if (skipBtn) skipBtn.remove();
+  tl = gsap.timeline({ onUpdate: render, onComplete: finish });
 
-  document.body.classList.remove("no-scroll");
-  window.removeEventListener("resize", resize);
-  if (tl) tl.kill();
-  canvas = ctx = dirtySnap = null;
+  // Spark → full flare
+  tl.to(state, { flare: 1, duration: CFG.ignite, ease: 'power2.inOut' }, 0.15);
+
+  // Light burns the fog away; the logo comes into focus behind it
+  tl.to(state, { clear: 1, duration: CFG.burn, ease: 'power2.in' }, 0.15 + CFG.ignite * 0.45);
+  tl.to(logo, {
+    opacity: 1, filter: 'blur(0px)', scale: 1,
+    duration: CFG.burn, ease: 'power2.out',
+  }, 0.15 + CFG.ignite * 0.45);
+
+  // Our flare settles into the logo's own flare
+  tl.to(state, { flare: 0, fogAlpha: 0, duration: 0.6, ease: 'power1.inOut' }, 0.15 + CFG.ignite + CFG.burn * 0.55);
+
+  // Hold, then dissolve into the hero
+  tl.to(overlay, {
+    opacity: 0, duration: CFG.exit, ease: 'power2.inOut',
+  }, `+=${CFG.hold}`);
+  tl.to(logo, { scale: 1.04, duration: CFG.exit, ease: 'power2.in' }, '<');
 }
 
-// -- Util ----------------------------------------------------
-function rand(max) { return Math.random() * max; }
+// ── Finish ────────────────────────────────────────────────
+
+function finish() {
+  if (done) return;
+  done = true;
+  window.removeEventListener('resize', resize);
+  window.removeEventListener('keydown', skip);
+  document.body.classList.remove('no-scroll');
+
+  if (overlay) {
+    overlay.style.transition = 'opacity 0.35s ease';
+    overlay.style.opacity = '0';
+    setTimeout(removeOverlay, 380);
+  }
+  ctx = fog = null;
+}
+
+function removeOverlay() {
+  document.getElementById('animation-overlay')?.remove();
+  document.body.classList.remove('no-scroll');
+}

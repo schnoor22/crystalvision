@@ -1,5 +1,5 @@
 /**
- * Crystal Vision Co. — Main Entry
+ * First Light Window Cleaning — Main Entry
  * 
  * Boots all modules: animation, modals, form, navigation,
  * scroll reveals. Phosphor Icons load via CSS imports in main.css.
@@ -227,7 +227,7 @@ async function loadVideos() {
         <div class="video-card rounded-2xl overflow-hidden aspect-video bg-slate-900 shadow-md">
           <iframe
             src="${embedUrl}"
-            title="${escHtml(v.title || 'Crystal Vision video')}"
+            title="${escHtml(v.title || 'First Light video')}"
             frameborder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowfullscreen

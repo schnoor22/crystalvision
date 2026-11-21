@@ -1,6 +1,6 @@
 'use strict';
 /**
- * Crystal Vision Co. — API Server
+ * First Light Window Cleaning — API Server
  * Runs as a Vercel serverless function (api/index.js re-exports this app).
  * Also works standalone: `node server.js` for local development.
  *
@@ -178,13 +178,13 @@ function getDefaultContent() {
       },
     },
     cta: {
-      title: 'Ready for crystal clear windows?',
+      title: 'Ready to let the light in?',
       subtitle: "Get a free, no-pressure quote in minutes. We'll take it from there.",
     },
     business: {
-      name: 'Crystal Vision Co.',
-      phone: '(503) 545-4706',
-      phoneUrl: 'tel:+15035454706',
+      name: 'First Light Window Cleaning',
+      phone: '(808) 829-9020',
+      phoneUrl: 'tel:+18088299020',
       email: 'info@crystalvisionusa.com',
       instagramUrl: 'https://www.instagram.com/crystalvisionusa/',
       payInvoiceUrl: 'https://venmo.com/u/Kidschmid',
@@ -582,12 +582,13 @@ async function sendEmailNotification(name, phone, message, address, source) {
   const { Resend } = require('resend');
   const resend = new Resend(RESEND_API_KEY);
   await resend.emails.send({
-    from: 'Crystal Vision Co. <quotes@crystalvisionusa.com>',
+    // Sender domain must be verified in Resend. Set EMAIL_FROM once the new domain is set up.
+    from: process.env.EMAIL_FROM || 'First Light Window Cleaning <quotes@crystalvisionusa.com>',
     to: [OWNER_EMAIL],
     subject: `New Quote Request from ${name}`,
     html: `
       <div style="font-family:Arial,sans-serif;max-width:600px">
-        <h2 style="color:#012A4A">New Quote Request</h2>
+        <h2 style="color:#17171B">New Quote Request</h2>
         <table style="width:100%;border-collapse:collapse">
           <tr><td style="padding:8px 0;font-weight:bold;color:#475569">Name:</td><td>${esc(name)}</td></tr>
           <tr><td style="padding:8px 0;font-weight:bold;color:#475569">Phone:</td><td><a href="tel:${phone}">${esc(phone)}</a></td></tr>
@@ -596,7 +597,7 @@ async function sendEmailNotification(name, phone, message, address, source) {
           ${source ? `<tr><td style="padding:8px 0;font-weight:bold;color:#475569">Heard via:</td><td>${esc(source)}</td></tr>` : ''}
         </table>
         <hr style="border:1px solid #e2e8f0;margin:20px 0"/>
-        <p style="color:#94a3b8;font-size:12px">Submitted ${new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles' })} PT</p>
+        <p style="color:#94a3b8;font-size:12px">Submitted ${new Date().toLocaleString('en-US', { timeZone: 'Pacific/Honolulu' })} HST</p>
       </div>`,
   });
 }
@@ -609,7 +610,7 @@ function esc(s) {
 
 if (require.main === module) {
   app.listen(PORT, () => {
-    console.log(`\nCrystal Vision API  →  http://localhost:${PORT}`);
+    console.log(`\nFirst Light API  →  http://localhost:${PORT}`);
     console.log(`  Admin password: ${ADMIN_PASSWORD === 'changeme123' ? '⚠️  DEFAULT — set ADMIN_PASSWORD in .env' : '✓ set'}`);
     console.log(`  Email notifications: ${RESEND_API_KEY ? '✓ enabled' : 'disabled (set RESEND_API_KEY)'}\n`);
   });

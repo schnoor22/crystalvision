@@ -1,5 +1,5 @@
 /**
- * Crystal Vision Co. — Modal System
+ * First Light Window Cleaning — Modal System
  * 
  * Accessible modals with focus trapping, ESC dismiss,
  * backdrop click, and smooth CSS transitions.

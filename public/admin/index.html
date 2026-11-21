@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin — Crystal Vision Co.</title>
+  <title>Admin — First Light Window Cleaning</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -15,8 +15,8 @@
         extend: {
           fontFamily: { sans: ['Lexend', 'sans-serif'] },
           colors: {
-            deep: { 950: '#011627', 900: '#012a47', 800: '#013a5c' },
-            wave: { 300: '#48CAE4', 400: '#00B4D8', 500: '#0096C7' },
+            deep: { 950: '#0E0E11', 900: '#17171B', 800: '#1F1F24' },
+            wave: { 300: '#F7976F', 400: '#F26A3D', 500: '#E8453C' },
             foam: { 50: '#f0faff', 100: '#e0f4ff' },
           },
         },
@@ -25,17 +25,17 @@
   </script>
   <style>
     body { font-family: 'Lexend', sans-serif; }
-    .tab-btn.active { background: #00B4D8; color: #011627; font-weight: 600; }
+    .tab-btn.active { background: #F26A3D; color: #0E0E11; font-weight: 600; }
     .tab-btn { transition: background 0.2s, color 0.2s; }
     .accordion-body { max-height: 0; overflow: hidden; transition: max-height 0.35s ease; }
     .accordion-body.open { max-height: 2000px; }
     .accordion-icon { transition: transform 0.25s; }
     .accordion-icon.open { transform: rotate(180deg); }
     ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: #012a47; }
-    ::-webkit-scrollbar-thumb { background: #00B4D8; border-radius: 3px; }
+    ::-webkit-scrollbar-track { background: #17171B; }
+    ::-webkit-scrollbar-thumb { background: #F26A3D; border-radius: 3px; }
     #toast { transition: opacity 0.4s, transform 0.4s; }
-    .stat-card { background: linear-gradient(135deg, #012a47 0%, #013a5c 100%); border: 1px solid rgba(0,180,216,0.2); }
+    .stat-card { background: linear-gradient(135deg, #17171B 0%, #1F1F24 100%); border: 1px solid rgba(242,106,61,0.2); }
   </style>
 </head>
 <body class="bg-deep-950 text-slate-200 min-h-screen">
@@ -54,7 +54,7 @@
           <path d="M4 10 Q10 4 16 10 Q22 16 28 10" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
         </svg>
       </div>
-      <h1 class="text-2xl font-bold text-white">Crystal Vision Co.</h1>
+      <h1 class="text-2xl font-bold text-white">First Light Window Cleaning</h1>
       <p class="text-slate-400 text-sm mt-1 font-light">Admin Dashboard</p>
     </div>
 
@@ -83,7 +83,7 @@
       </form>
     </div>
 
-    <p class="text-center text-slate-600 text-xs mt-6">Crystal Vision Co. &copy; <span id="login-year"></span></p>
+    <p class="text-center text-slate-600 text-xs mt-6">First Light Window Cleaning &copy; <span id="login-year"></span></p>
   </div>
 </div>
 
@@ -97,12 +97,12 @@
     <div class="flex items-center gap-3">
       <div class="w-8 h-8 rounded-lg bg-wave-400 flex items-center justify-center">
         <svg width="16" height="16" viewBox="0 0 32 32" fill="none">
-          <path d="M4 22 Q10 16 16 22 Q22 28 28 22" stroke="#011627" stroke-width="3" stroke-linecap="round" fill="none"/>
-          <path d="M4 16 Q10 10 16 16 Q22 22 28 16" stroke="#011627" stroke-width="3" stroke-linecap="round" fill="none"/>
-          <path d="M4 10 Q10 4 16 10 Q22 16 28 10" stroke="#011627" stroke-width="3" stroke-linecap="round" fill="none"/>
+          <path d="M4 22 Q10 16 16 22 Q22 28 28 22" stroke="#0E0E11" stroke-width="3" stroke-linecap="round" fill="none"/>
+          <path d="M4 16 Q10 10 16 16 Q22 22 28 16" stroke="#0E0E11" stroke-width="3" stroke-linecap="round" fill="none"/>
+          <path d="M4 10 Q10 4 16 10 Q22 16 28 10" stroke="#0E0E11" stroke-width="3" stroke-linecap="round" fill="none"/>
         </svg>
       </div>
-      <span class="font-semibold text-white text-sm">Crystal Vision</span>
+      <span class="font-semibold text-white text-sm">First Light</span>
       <span class="text-slate-500 text-sm font-light">/ Admin</span>
     </div>
     <div class="flex items-center gap-3">
@@ -555,7 +555,7 @@ function renderChart(dailyViews) {
         label: 'Page Views',
         data: counts,
         backgroundColor: 'rgba(0, 180, 216, 0.5)',
-        borderColor: '#00B4D8',
+        borderColor: '#F26A3D',
         borderWidth: 1,
         borderRadius: 4,
       }],

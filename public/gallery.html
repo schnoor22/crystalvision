@@ -3,14 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Gallery — Crystal Vision Co.</title>
-  <meta name="description" content="Browse Crystal Vision Co.'s full gallery of residential and commercial window cleaning and screen repair work." />
-  <link rel="icon" type="image/png" href="/logo.png" />
+  <title>Gallery — First Light Window Cleaning</title>
+  <meta name="description" content="Browse First Light Window Cleaning's full gallery of residential and commercial window cleaning and screen repair work." />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Satisfy&family=Lexend:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
   <!-- Tailwind CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -19,12 +20,13 @@
       theme: {
         extend: {
           colors: {
-            deep: { 950: '#011627', 900: '#012A4A', 800: '#013A63', 700: '#01497C' },
-            wave: { 600: '#0077B6', 500: '#0096C7', 400: '#00B4D8', 300: '#48CAE4', 200: '#90E0EF' },
+            deep: { 950: '#0E0E11', 900: '#17171B', 800: '#1F1F24', 700: '#2A2A31' },
+            wave: { 600: '#1F5591', 500: '#2E6CA9', 400: '#3F82C7', 300: '#6AA0DC', 200: '#A3C4EC' },
+            sun: { 500: '#E8453C', 400: '#F26A3D', 300: '#F7976F' },
           },
           fontFamily: {
-            sans: ['Lexend', 'sans-serif'],
-            brand: ['Satisfy', 'cursive'],
+            sans: ['Inter', 'sans-serif'],
+            heading: ['Archivo', 'sans-serif'],
           },
         },
       },
@@ -32,12 +34,12 @@
   </script>
 
   <style>
-    body { background: #011627; color: #fff; font-family: 'Lexend', sans-serif; min-height: 100vh; }
+    body { background: #0E0E11; color: #fff; font-family: 'Inter', sans-serif; min-height: 100vh; }
 
     /* Nav */
     .port-nav {
       position: sticky; top: 0; z-index: 50;
-      background: rgba(1, 22, 39, 0.92);
+      background: rgba(14, 14, 17, 0.92);
       backdrop-filter: blur(12px);
       border-bottom: 1px solid rgba(255,255,255,0.06);
       padding: 0.875rem 0;
@@ -45,7 +47,7 @@
 
     /* Hero banner */
     .port-hero {
-      background: linear-gradient(135deg, #012A4A 0%, #013A63 50%, #01497C 100%);
+      background: radial-gradient(ellipse 80% 100% at 50% 120%, rgba(46,108,169,0.5), transparent 65%), #17171B;
       padding: 5rem 1.25rem 4rem;
       text-align: center;
       position: relative;
@@ -54,7 +56,7 @@
     .port-hero::before {
       content: '';
       position: absolute; inset: 0;
-      background: radial-gradient(ellipse 70% 80% at 50% 50%, rgba(0,180,216,0.12), transparent);
+      background: radial-gradient(ellipse 70% 80% at 50% 50%, rgba(232,69,60,0.14), transparent);
       pointer-events: none;
     }
 
@@ -69,7 +71,7 @@
       position: relative;
       border-radius: 1rem;
       overflow: hidden;
-      background: #012A4A;
+      background: #1F1F24;
       border: 1px solid rgba(255,255,255,0.06);
       aspect-ratio: 4/3;
       cursor: pointer;
@@ -81,7 +83,7 @@
 
     .gallery-card .overlay {
       position: absolute; inset: 0;
-      background: linear-gradient(to top, rgba(1,22,39,0.85) 0%, transparent 50%);
+      background: linear-gradient(to top, rgba(14,14,17,0.85) 0%, transparent 50%);
       opacity: 0;
       transition: opacity 0.25s;
       display: flex; align-items: flex-end; padding: 1.25rem;
@@ -131,13 +133,12 @@
   <nav class="port-nav">
     <div class="max-w-7xl mx-auto px-5 sm:px-8 flex items-center justify-between">
       <a href="/" class="flex items-center gap-3">
-        <img src="/logo.png" alt="Crystal Vision Co." class="h-10 w-10 rounded-full" />
-        <span class="font-brand text-xl text-white">Crystal Vision Co.</span>
+        <img src="/logo-wordmark.png" alt="First Light Window Cleaning" class="h-9 w-auto" width="635" height="144" />
       </a>
       <div class="flex items-center gap-6">
         <a href="/" class="text-white/70 hover:text-white text-sm transition">Home</a>
         <a href="/#services" class="text-white/70 hover:text-white text-sm transition">Services</a>
-        <a href="/#hero" class="px-4 py-2 rounded-full text-sm font-semibold text-deep-950 transition" style="background:#00B4D8;">Get a Quote</a>
+        <a href="/#hero" class="px-4 py-2 rounded-full text-sm font-semibold text-deep-950 transition" style="background:linear-gradient(135deg,#F7976F,#F26A3D);">Get a Quote</a>
       </div>
     </div>
   </nav>
@@ -145,7 +146,7 @@
   <!-- HERO BANNER -->
   <div class="port-hero">
     <div class="relative z-10">
-      <p class="text-wave-300 text-sm font-semibold uppercase tracking-widest mb-3">Crystal Vision Co.</p>
+      <p class="text-sun-300 text-sm font-semibold uppercase tracking-widest mb-3">First Light Window Cleaning</p>
       <h1 class="text-4xl sm:text-5xl font-extrabold text-white tracking-tight mb-4">Gallery</h1>
       <p class="text-white/60 text-lg max-w-xl mx-auto leading-relaxed">
         A look at the homes and businesses we've transformed — one streak-free window at a time.
@@ -169,17 +170,17 @@
   </main>
 
   <!-- CTA -->
-  <section class="text-center py-20 px-5" style="background: linear-gradient(135deg, #012A4A, #013A63);">
+  <section class="text-center py-20 px-5" style="background: radial-gradient(ellipse 70% 90% at 50% 115%, rgba(46,108,169,0.55), transparent 65%), #17171B;">
     <h2 class="text-3xl font-extrabold text-white mb-3">Ready for windows this clean?</h2>
     <p class="text-white/60 mb-8">Get a free, no-pressure quote in minutes.</p>
-    <a href="/#hero" class="inline-flex items-center gap-2 px-8 py-3.5 rounded-full font-semibold text-deep-950 text-lg transition hover:opacity-90" style="background:#00B4D8;">
+    <a href="/#hero" class="inline-flex items-center gap-2 px-8 py-3.5 rounded-full font-semibold text-deep-950 text-lg transition hover:opacity-90" style="background:linear-gradient(135deg,#F7976F,#F26A3D);">
       Get Your Free Quote →
     </a>
   </section>
 
   <!-- FOOTER -->
-  <footer class="py-8 text-center border-t" style="border-color:rgba(255,255,255,0.06); background:#011627;">
-    <p class="text-white/20 text-xs">&copy; <span id="footer-year"></span> Crystal Vision Co. All rights reserved.</p>
+  <footer class="py-8 text-center border-t" style="border-color:rgba(255,255,255,0.06); background:#0E0E11;">
+    <p class="text-white/20 text-xs">&copy; <span id="footer-year"></span> First Light Window Cleaning. All rights reserved.</p>
   </footer>
 
   <!-- LIGHTBOX -->

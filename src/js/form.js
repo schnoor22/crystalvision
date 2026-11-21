@@ -1,5 +1,5 @@
 /**
- * Crystal Vision Co. — Quote Form Handler
+ * First Light Window Cleaning — Quote Form Handler
  * 
  * Handles form validation, submission to the API,
  * and success/error states.

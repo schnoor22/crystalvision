@@ -2,43 +2,54 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#17171B" />
 
     <!-- SEO -->
-    <title>Crystal Vision Co. &mdash; Professional Window Cleaning</title>
-    <meta name="description" content="Let the sunshine back in. Crystal Vision Co. offers professional residential and commercial window cleaning, plus expert window screen repair. Request your free quote today." />
+    <title>First Light Window Cleaning &mdash; Professional Window Cleaning in Hawaii</title>
+    <meta name="description" content="Let the sunshine back in. First Light Window Cleaning offers professional residential and commercial window cleaning in Hawaii, plus expert window screen repair. Request your free quote today." />
 
     <!-- OG Tags -->
-    <meta property="og:title" content="Crystal Vision Co. &mdash; Professional Window Cleaning" />
+    <meta property="og:title" content="First Light Window Cleaning" />
     <meta property="og:description" content="Let the sunshine back in. Professional window cleaning &amp; screen repair." />
     <meta property="og:type" content="website" />
     <meta property="og:image" content="/og-image.jpg" />
-    <meta property="og:url" content="https://crystalvisionusa.com/" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <!-- TODO: add og:url + canonical once the new domain is known -->
 
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="/logo.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 
-    <!-- Preload critical assets -->
-    <link rel="preload" href="/background.jpg" as="image" />
+    <!-- Intro plays once per session, never with reduced motion -->
+    <script>
+      try {
+        if (!matchMedia('(prefers-reduced-motion: reduce)').matches && !sessionStorage.getItem('fl_intro_seen')) {
+          document.documentElement.classList.add('intro');
+        }
+      } catch (e) {}
+    </script>
+    <link rel="preload" href="/logo-full.jpg" as="image" />
   </head>
-  <body class="no-scroll">
+  <body>
 
-    <!-- SQUEEGEE ANIMATION OVERLAY -->
-    <div id="animation-overlay">
-      <canvas id="squeegee-canvas"></canvas>
-      <button id="skip-btn" aria-label="Skip animation">
-        Skip Intro <i class="ph ph-fast-forward"></i>
+    <!-- "FIRST LIGHT" INTRO OVERLAY -->
+    <div id="animation-overlay" aria-hidden="true">
+      <img id="intro-logo" src="/logo-full.jpg" alt="" width="1169" height="809" />
+      <canvas id="intro-canvas"></canvas>
+      <button id="skip-btn" type="button">
+        Skip intro <i class="ph ph-fast-forward"></i>
       </button>
     </div>
 
     <!-- NAVIGATION -->
     <header class="site-nav" id="site-nav">
       <div class="max-w-7xl mx-auto px-5 sm:px-8 flex items-center justify-between">
-        <a href="#" class="flex items-center gap-3 group">
-          <img src="/logo.png" alt="Crystal Vision Co." class="h-11 w-11 rounded-full shadow-md group-hover:shadow-lg transition-shadow" />
-          <span class="font-brand text-xl text-white">
-            Crystal Vision Co.
-          </span>
+        <a href="#hero" class="flex items-center" aria-label="First Light Window Cleaning, back to top">
+          <img src="/logo-wordmark.png" alt="First Light Window Cleaning" class="brand-logo" width="635" height="144" />
         </a>
 
         <nav class="hidden md:flex items-center gap-7">
@@ -46,9 +57,9 @@
           <a href="#about" class="nav-link">About</a>
           <a href="#services" class="nav-link">Services</a>
           <a href="#gallery" class="nav-link">Gallery</a>
-          <a href="tel:+15035454706" data-content-href="business.phoneUrl" class="nav-link flex items-center gap-1.5">
+          <a href="tel:+18088299020" data-content-href="business.phoneUrl" class="nav-link flex items-center gap-1.5">
             <i class="ph ph-phone" style="font-size:1rem;"></i>
-            <span data-content-key="business.phone">(503) 545-4706</span>
+            <span data-content-key="business.phone">(808) 829-9020</span>
           </a>
           <button data-modal="quote" class="nav-cta">
             <i class="ph-bold ph-chat-circle-dots" style="font-size: 1rem;"></i>
@@ -68,7 +79,7 @@
     <!-- Mobile Drawer -->
     <nav id="mobile-drawer" class="mobile-drawer md:hidden">
       <div class="flex items-center justify-between mb-10">
-        <span class="font-brand text-white text-xl">Crystal Vision Co.</span>
+        <img src="/logo-wordmark.png" alt="First Light Window Cleaning" class="brand-logo" width="635" height="144" />
         <button id="drawer-close" class="hamburger" aria-label="Close menu">
           <i class="ph-bold ph-x"></i>
         </button>
@@ -78,9 +89,9 @@
         <a href="#about" class="mobile-link text-white/80 hover:text-white text-lg font-medium py-2 transition">About</a>
         <a href="#services" class="mobile-link text-white/80 hover:text-white text-lg font-medium py-2 transition">Services</a>
         <a href="#gallery" class="mobile-link text-white/80 hover:text-white text-lg font-medium py-2 transition">Gallery</a>
-        <a href="tel:+15035454706" data-content-href="business.phoneUrl" class="mobile-link text-white/80 hover:text-white text-lg font-medium py-2 transition flex items-center gap-2">
+        <a href="tel:+18088299020" data-content-href="business.phoneUrl" class="mobile-link text-white/80 hover:text-white text-lg font-medium py-2 transition flex items-center gap-2">
           <i class="ph ph-phone"></i>
-          <span data-content-key="business.phone">(503) 545-4706</span>
+          <span data-content-key="business.phone">(808) 829-9020</span>
         </a>
       </div>
       <button data-modal="quote" class="nav-cta mt-auto justify-center text-base py-3">
@@ -248,7 +259,7 @@
             Our Work
           </div>
           <h2 class="section-title">Gallery</h2>
-          <p class="section-text mx-auto">See the crystal-clear results we deliver for homes and businesses.</p>
+          <p class="section-text mx-auto">See the streak-free results we deliver for homes and businesses.</p>
         </div>
         <div id="gallery-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 reveal">
           <!-- populated by JS -->
@@ -322,7 +333,7 @@
       <div class="section-inner-sm relative z-10 reveal">
         <div class="cta-inner">
           <h2 class="font-[var(--font-heading)] text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight" data-content-key="cta.title">
-            Ready for crystal clear windows?
+            Ready to let the light in?
           </h2>
           <p class="text-wave-200 text-base sm:text-lg max-w-md mx-auto leading-relaxed opacity-80" data-content-key="cta.subtitle">
             Get a free, no-pressure quote in minutes. We'll take it from there.
@@ -340,11 +351,7 @@
       <div class="section-inner">
         <!-- Brand -->
         <div class="flex flex-col items-center gap-2 mb-8">
-          <div class="flex items-center gap-3">
-            <img src="/logo.png" alt="Crystal Vision Co." class="h-9 w-9 rounded-full opacity-90" />
-            <span class="font-brand text-white text-xl">Crystal Vision Co.</span>
-          </div>
-          <p class="text-white/30 text-xs">Professional Window Cleaning</p>
+          <img src="/logo-wordmark.png" alt="First Light Window Cleaning" class="brand-logo" style="height: 2.75rem;" width="635" height="144" loading="lazy" />
         </div>
 
         <!-- Nav links -->
@@ -357,9 +364,9 @@
 
         <!-- Contact row -->
         <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
-          <a href="tel:+15035454706" data-content-href="business.phoneUrl" class="footer-link flex items-center gap-1.5">
+          <a href="tel:+18088299020" data-content-href="business.phoneUrl" class="footer-link flex items-center gap-1.5">
             <i class="ph ph-phone" style="font-size:1rem;"></i>
-            <span data-content-key="business.phone">(503) 545-4706</span>
+            <span data-content-key="business.phone">(808) 829-9020</span>
           </a>
           <a href="mailto:info@crystalvisionusa.com" data-content-href="business.emailUrl" class="footer-link flex items-center gap-1.5">
             <i class="ph ph-envelope" style="font-size:1rem;"></i>
@@ -380,7 +387,7 @@
 
         <div class="border-t border-white/10 pt-8 text-center">
           <p class="text-white/30 text-xs">
-            &copy; <span id="current-year"></span> Crystal Vision Co. All rights reserved.
+            &copy; <span id="current-year"></span> First Light Window Cleaning. All rights reserved.
           </p>
         </div>
       </div>

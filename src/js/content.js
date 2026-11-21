@@ -1,5 +1,5 @@
 /**
- * Crystal Vision Co. — Content Loader
+ * First Light Window Cleaning — Content Loader
  *
  * Fetches editable site content from /api/content and applies
  * it to elements decorated with data-content-key="key.path".
