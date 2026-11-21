@@ -1,134 +1,75 @@
-# Crystal Vision Co. — Professional Window Cleaning Website
+# First Light Window Cleaning — Website
 
-A modern, single-page business site with a showstopping squeegee animation that wipes away a "dirty window" overlay on load.
+Single-page business site for First Light Window Cleaning (Hawaii), with an
+editable-content admin panel, gallery, reviews and a quote form.
 
-## Tech Stack
+## Tech stack
 
 | Layer | Technology |
 |---|---|
-| **Build** | Vite |
-| **Frontend** | Vanilla JS, Tailwind CSS v4, GSAP |
-| **Icons** | Lucide |
-| **API** | Express.js, SQLite (better-sqlite3), Resend |
-| **Payments** | Stripe Payment Links (Phase 1) |
-| **Deploy** | Nginx + PM2 + Let's Encrypt on Ubuntu |
+| Build | Vite |
+| Frontend | Vanilla JS, Tailwind CSS v4, GSAP, Phosphor icons |
+| API | Express (runs as a Vercel serverless function via `api/index.js`) |
+| Data | Turso (libsql) for content, quotes, reviews, stats |
+| Images | Vercel Blob (gallery + hero uploads) |
+| Email | Resend (quote notifications) |
+| Hosting | Vercel |
 
-## Getting Started
-
-### Prerequisites
-- Node.js 18+
-
-### Development
+## Local development
 
 ```bash
-# Install frontend dependencies
 npm install
-
-# Install API dependencies
 cd api && npm install && cd ..
 
-# Start both servers
-npm run dev          # Frontend on :5173
+npm run dev            # frontend on :5173 (proxies /api to :3000)
 cd api && npm run dev  # API on :3000
 ```
 
-The Vite dev server proxies `/api/*` to `localhost:3000` automatically.
+Copy `api/.env.example` to `api/.env` and fill it in. For local data, set
+`TURSO_DATABASE_URL=file:local.db`.
 
-### Required Assets
+Useful API env vars:
 
-Place these files in the `/public` folder:
-
-| File | Description |
+| Var | Purpose |
 |---|---|
-| `logo.png` | **Company logo** (the surfer/squeegee character) — DROP THIS IN FIRST |
-| `hero-clean.jpg` | Bright sunny photo of clean windows on a nice home (replace the placeholder) |
-| `og-image.jpg` | 1200×630 social sharing image |
+| `ADMIN_PASSWORD` | Password for `/admin` |
+| `RESEND_API_KEY` | Enables quote emails |
+| `OWNER_EMAIL` | Where quote requests are sent |
+| `EMAIL_FROM` | Sender, e.g. `First Light Window Cleaning <quotes@yourdomain.com>` (domain must be verified in Resend) |
 
-### Environment Variables
+## Editing content
 
-Copy `api/.env.example` to `api/.env` and fill in:
+Most copy (hero, about, services, phone, email, Instagram, pay link), the
+hero photo, gallery and reviews are edited at `/admin` and stored in Turso.
+The text in `index.html` and `getDefaultContent()` in `api/server.js` is only
+the fallback when the database has nothing saved.
 
-```
-RESEND_API_KEY=your_resend_api_key    # For email notifications (resend.com)
-OWNER_EMAIL=owner@crystalvisionco.com  # Where quote requests go
-```
-
-## Production Build
-
-```bash
-npm run build   # Outputs to dist/
-```
-
-## Deployment (Ubuntu Server)
-
-See `deploy/` folder for:
-- `nginx.conf` — Nginx configuration (static files + API reverse proxy)
-- `ecosystem.config.cjs` — PM2 process manager config
-- `deploy.sh` — One-command deploy script
-
-### First-time server setup:
-```bash
-# 1. Install prerequisites
-sudo apt update && sudo apt install nginx nodejs npm
-sudo npm i -g pm2
-
-# 2. Configure Nginx
-sudo cp deploy/nginx.conf /etc/nginx/sites-available/crystalvisionco
-sudo ln -s /etc/nginx/sites-available/crystalvisionco /etc/nginx/sites-enabled/
-# Edit the server_name in the config to match your domain
-sudo nginx -t && sudo systemctl reload nginx
-
-# 3. SSL
-sudo apt install certbot python3-certbot-nginx
-sudo certbot --nginx -d yourdomain.com -d www.yourdomain.com
-
-# 4. Start API
-pm2 start deploy/ecosystem.config.cjs
-pm2 save
-pm2 startup
-```
-
-## Project Structure
+## Project structure
 
 ```
-├── index.html                 # Single-page site
+├── index.html               # The site (single page)
 ├── src/
-│   ├── main.js                # Entry point — boots all modules
-│   ├── styles/main.css        # Tailwind + custom styles + design tokens
+│   ├── main.js              # Boots modules, nav, gallery/reviews/videos
+│   ├── styles/main.css      # Tailwind + design tokens (night / glow / sun)
 │   └── js/
-│       ├── animation.js       # GSAP + Canvas squeegee animation
-│       ├── modals.js          # Accessible modal system
-│       └── form.js            # Quote form validation + submission
+│       ├── animation.js     # "First light" intro (once per session)
+│       ├── content.js       # Applies admin-edited content
+│       ├── modals.js        # Accessible modals
+│       └── form.js          # Quote form
 ├── public/
-│   ├── logo.png               # ← ADD YOUR LOGO HERE
-│   ├── hero-clean.jpg         # Hero background (replace placeholder)
-│   ├── robots.txt             # SEO
-│   └── squeegee.svg           # Decorative asset
+│   ├── logo-wordmark.png    # White wordmark, transparent (nav/footer)
+│   ├── logo-full.jpg        # Full logo artwork (intro)
+│   ├── og-image.jpg         # 1200x630 social share image
+│   ├── favicon-32.png, icon-512.png, apple-touch-icon.png
+│   ├── background.jpg       # Fallback hero photo
+│   ├── gallery.html         # Full gallery page
+│   └── admin/index.html     # Admin panel
 ├── api/
-│   ├── server.js              # Express API (quotes + future payments)
-│   ├── .env.example           # Environment variable template
-│   └── data/quotes.db         # SQLite database (auto-created)
-├── deploy/
-│   ├── nginx.conf             # Nginx config template
-│   ├── ecosystem.config.cjs   # PM2 config
-│   └── deploy.sh              # Deployment script
-└── vite.config.js             # Vite + Tailwind plugin config
+│   ├── server.js            # Express API
+│   └── index.js             # Vercel entry
+└── vercel.json
 ```
 
-## Payments (Phase 1 — Stripe Payment Links)
+## Deploy
 
-No code integration needed yet. The owner:
-1. Creates a Stripe account at stripe.com
-2. After completing a job, creates a **Payment Link** in the Stripe dashboard
-3. Texts/emails the link to the customer
-4. The "Pay Invoice" link in the site footer can point to a Stripe Customer Portal (set up later)
-
-## Future Enhancements
-
-- [ ] Real hero photo + professional OG image
-- [ ] Stripe Checkout Sessions (Phase 2 — pay directly on site)
-- [ ] Testimonials section
-- [ ] Photo gallery
-- [ ] Blog (migrate to Astro if needed)
-- [ ] SMS notifications via Twilio
-- [ ] Google Business integration
+Push to the branch Vercel deploys from. `npm run build` outputs to `dist/`.
