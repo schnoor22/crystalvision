@@ -6,14 +6,13 @@
  * sharpens, and the overlay dissolves into the site.
  *
  *  - About 2.3s total, skippable (button, click, any key)
- *  - Plays once per browser session
+ *  - Plays on every visit
  *  - Never plays with prefers-reduced-motion
  *  - The page is fully usable without JS (overlay hides itself via CSS)
  */
 
 import { gsap } from 'gsap';
 
-const SEEN_KEY = 'fl_intro_seen'; // also used by the inline script in index.html
 
 // Sun position inside /logo-full.jpg (1169 x 809), as fractions
 const SUN = { x: 585 / 1169, y: 325 / 809 };
@@ -35,7 +34,7 @@ let done = false;
 // ── Public API ────────────────────────────────────────────
 
 // The decision is made by a tiny inline script in <head> (so returning
-// visitors never see a flash of the overlay). It adds html.intro.
+// visitors with reduced motion never see a flash of the overlay). It adds html.intro.
 export function shouldPlayAnimation() {
   return document.documentElement.classList.contains('intro');
 }
@@ -45,8 +44,6 @@ export async function initAnimation() {
   canvas = document.getElementById('intro-canvas');
   logo = document.getElementById('intro-logo');
   if (!overlay || !canvas || !logo) return removeOverlay();
-
-  try { sessionStorage.setItem(SEEN_KEY, '1'); } catch { /* ignore */ }
 
   document.body.classList.add('no-scroll');
   overlay.classList.add('playing');

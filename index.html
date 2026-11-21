@@ -24,10 +24,10 @@
     <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 
-    <!-- Intro plays once per session, never with reduced motion -->
+    <!-- Intro plays on every visit, except for people who ask for reduced motion -->
     <script>
       try {
-        if (!matchMedia('(prefers-reduced-motion: reduce)').matches && !sessionStorage.getItem('fl_intro_seen')) {
+        if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
           document.documentElement.classList.add('intro');
         }
       } catch (e) {}
