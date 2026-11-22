@@ -1,0 +1,46 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+/* First Light admin panel. Dark UI with the sunrise orange as the accent
+   (called "wave" here for historical reasons). */
+
+@theme {
+  --font-sans: 'Inter', system-ui, sans-serif;
+
+  --color-deep-950: #0E0E11;
+  --color-deep-900: #17171B;
+  --color-deep-800: #1F1F24;
+
+  --color-wave-300: #F7976F;
+  --color-wave-400: #F26A3D;
+  --color-wave-500: #E8453C;
+}
+
+@layer base {
+  button, [role="button"] { cursor: pointer; }
+}
+
+.tab-btn.active { background: #F26A3D; color: #0E0E11; font-weight: 600; }
+.tab-btn { transition: background 0.2s, color 0.2s; }
+.tab-btn.active #quotes-badge { background: rgba(14, 14, 17, 0.18); color: #0E0E11; }
+.accordion-body { max-height: 0; overflow: hidden; transition: max-height 0.35s ease; }
+.accordion-body.open { max-height: 4000px; }
+.accordion-icon { transition: transform 0.25s; }
+.accordion-icon.open { transform: rotate(180deg); }
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #17171B; }
+::-webkit-scrollbar-thumb { background: #F26A3D; border-radius: 3px; }
+#toast { transition: opacity 0.4s, transform 0.4s; }
+.stat-card { background: linear-gradient(135deg, #17171B 0%, #1F1F24 100%); border: 1px solid rgba(242,106,61,0.2); }
+
+/* Tab bar: scrolls sideways on phones, becomes the sidebar from 768px up */
+.tab-nav { scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.tab-nav::-webkit-scrollbar { display: none; }
+
+@media (max-width: 767px) {
+  /* 16px inputs stop iOS from zooming the page on focus */
+  input[type="text"], input[type="password"], input[type="tel"], input[type="email"], input[type="url"], textarea, select { font-size: 16px !important; }
+  /* Comfortable tap targets */
+  .tab-nav .tab-btn { min-height: 44px; }
+  button, .btn { touch-action: manipulation; }
+}

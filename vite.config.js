@@ -9,6 +9,7 @@ export default defineConfig({
       input: {
         main: resolve(import.meta.dirname, 'index.html'),
         gallery: resolve(import.meta.dirname, 'gallery.html'),
+        admin: resolve(import.meta.dirname, 'admin/index.html'),
       },
     },
   },

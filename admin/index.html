@@ -4,39 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin — First Light Window Cleaning</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
-  <script src="https://cdn.tailwindcss.com"></script>
+  <meta name="robots" content="noindex" />
+  <meta name="theme-color" content="#17171B" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <!-- Styles are compiled by Vite (src/admin.css) -->
+  <script type="module" src="/src/admin.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: { sans: ['Lexend', 'sans-serif'] },
-          colors: {
-            deep: { 950: '#0E0E11', 900: '#17171B', 800: '#1F1F24' },
-            wave: { 300: '#F7976F', 400: '#F26A3D', 500: '#E8453C' },
-            foam: { 50: '#f0faff', 100: '#e0f4ff' },
-          },
-        },
-      },
-    };
-  </script>
-  <style>
-    body { font-family: 'Lexend', sans-serif; }
-    .tab-btn.active { background: #F26A3D; color: #0E0E11; font-weight: 600; }
-    .tab-btn { transition: background 0.2s, color 0.2s; }
-    .accordion-body { max-height: 0; overflow: hidden; transition: max-height 0.35s ease; }
-    .accordion-body.open { max-height: 2000px; }
-    .accordion-icon { transition: transform 0.25s; }
-    .accordion-icon.open { transform: rotate(180deg); }
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: #17171B; }
-    ::-webkit-scrollbar-thumb { background: #F26A3D; border-radius: 3px; }
-    #toast { transition: opacity 0.4s, transform 0.4s; }
-    .stat-card { background: linear-gradient(135deg, #17171B 0%, #1F1F24 100%); border: 1px solid rgba(242,106,61,0.2); }
-  </style>
 </head>
 <body class="bg-deep-950 text-slate-200 min-h-screen">
 
@@ -47,19 +21,14 @@
   <div class="w-full max-w-sm">
     <!-- Logo -->
     <div class="text-center mb-8">
-      <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-wave-400 mb-4">
-        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-          <path d="M4 22 Q10 16 16 22 Q22 28 28 22" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
-          <path d="M4 16 Q10 10 16 16 Q22 22 28 16" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
-          <path d="M4 10 Q10 4 16 10 Q22 16 28 10" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
-        </svg>
-      </div>
-      <h1 class="text-2xl font-bold text-white">First Light Window Cleaning</h1>
-      <p class="text-slate-400 text-sm mt-1 font-light">Admin Dashboard</p>
+      <img src="/icon-512.png" alt="" class="w-16 h-16 rounded-2xl mx-auto mb-5" />
+      <img src="/logo-wordmark.png" alt="First Light Window Cleaning" class="h-10 w-auto mx-auto" width="635" height="144" />
+      <h1 class="sr-only">First Light Window Cleaning</h1>
+      <p class="text-slate-400 text-sm mt-3">Admin Dashboard</p>
     </div>
 
     <!-- Card -->
-    <div class="bg-deep-900 border border-slate-700/50 rounded-2xl p-8 shadow-2xl">
+    <div class="bg-deep-900 border border-slate-700/50 rounded-2xl p-4 sm:p-6 sm:p-8 shadow-2xl">
       <h2 class="text-lg font-semibold text-white mb-6">Sign In</h2>
       <form id="login-form" class="space-y-4">
         <div>
@@ -69,7 +38,7 @@
             type="password"
             autocomplete="current-password"
             placeholder="Enter admin password"
-            class="w-full px-4 py-2.5 rounded-xl bg-deep-950 border border-slate-600 text-white placeholder-slate-500 focus:outline-none focus:border-wave-400 focus:ring-1 focus:ring-wave-400 transition text-sm"
+            class="w-full px-4 py-2.5 rounded-xl bg-deep-950 border border-slate-600 text-white placeholder:text-slate-500 focus:outline-none focus:border-wave-400 focus:ring-1 focus:ring-wave-400 transition text-sm"
           />
         </div>
         <div id="login-error" class="hidden text-red-400 text-sm py-2 px-3 bg-red-400/10 rounded-lg border border-red-400/20"></div>
@@ -93,57 +62,54 @@
 <div id="admin-app" class="hidden min-h-screen flex flex-col">
 
   <!-- Top Bar -->
-  <header class="bg-deep-900 border-b border-slate-700/60 h-14 flex items-center justify-between px-6 flex-shrink-0 z-20">
-    <div class="flex items-center gap-3">
-      <div class="w-8 h-8 rounded-lg bg-wave-400 flex items-center justify-center">
-        <svg width="16" height="16" viewBox="0 0 32 32" fill="none">
-          <path d="M4 22 Q10 16 16 22 Q22 28 28 22" stroke="#0E0E11" stroke-width="3" stroke-linecap="round" fill="none"/>
-          <path d="M4 16 Q10 10 16 16 Q22 22 28 16" stroke="#0E0E11" stroke-width="3" stroke-linecap="round" fill="none"/>
-          <path d="M4 10 Q10 4 16 10 Q22 16 28 10" stroke="#0E0E11" stroke-width="3" stroke-linecap="round" fill="none"/>
-        </svg>
-      </div>
-      <span class="font-semibold text-white text-sm">First Light</span>
-      <span class="text-slate-500 text-sm font-light">/ Admin</span>
+  <header class="bg-deep-900 border-b border-slate-700/60 h-14 flex items-center justify-between gap-3 px-4 md:px-6 shrink-0 z-30">
+    <div class="flex items-center gap-2.5 min-w-0">
+      <img src="/icon-512.png" alt="" class="w-8 h-8 rounded-lg shrink-0" />
+      <span class="font-semibold text-white text-sm whitespace-nowrap">First Light <span class="text-slate-500 font-normal">Admin</span></span>
     </div>
-    <div class="flex items-center gap-3">
-      <a href="/" target="_blank" class="text-xs text-slate-400 hover:text-wave-300 transition flex items-center gap-1.5">
+    <div class="flex items-center gap-2 shrink-0">
+      <a href="/" target="_blank" rel="noopener" class="text-xs text-slate-300 hover:text-wave-300 transition flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-700 hover:border-wave-400/40">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-        View Site
+        <span><span class="hidden min-[400px]:inline">View </span>Site</span>
       </a>
-      <button id="logout-btn" class="text-xs text-slate-400 hover:text-red-400 transition px-3 py-1.5 rounded-lg border border-slate-700 hover:border-red-400/40">
+      <button id="logout-btn" class="text-xs text-slate-300 hover:text-red-400 transition px-3 py-2 rounded-lg border border-slate-700 hover:border-red-400/40">
         Log Out
       </button>
     </div>
   </header>
 
-  <div class="flex flex-1 min-h-0">
+  <div class="flex flex-col md:flex-row flex-1 min-h-0">
     <!-- Sidebar -->
-    <aside class="w-56 bg-deep-900 border-r border-slate-700/60 flex flex-col py-6 flex-shrink-0">
-      <nav class="space-y-1 px-3">
-        <button class="tab-btn active w-full text-left px-4 py-2.5 rounded-xl text-sm flex items-center gap-3" data-tab="dashboard">
+    <aside class="bg-deep-900 border-b md:border-b-0 md:border-r border-slate-700/60 flex md:flex-col md:w-56 py-2 md:py-6 shrink-0 sticky top-0 md:static z-20">
+      <nav class="tab-nav flex md:flex-col gap-1 px-3 overflow-x-auto md:overflow-visible w-full" aria-label="Admin sections">
+        <button class="tab-btn active shrink-0 md:w-full whitespace-nowrap text-left px-4 py-2.5 rounded-xl text-sm flex items-center gap-2.5 md:gap-3" data-tab="dashboard">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
           Dashboard
         </button>
-        <button class="tab-btn w-full text-left px-4 py-2.5 rounded-xl text-sm flex items-center gap-3 hover:bg-deep-800" data-tab="content">
+        <button class="tab-btn shrink-0 md:w-full whitespace-nowrap text-left px-4 py-2.5 rounded-xl text-sm flex items-center gap-2.5 md:gap-3 hover:bg-deep-800" data-tab="content">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           Content Editor
         </button>
-        <button class="tab-btn w-full text-left px-4 py-2.5 rounded-xl text-sm flex items-center gap-3 hover:bg-deep-800" data-tab="quotes">
+        <button class="tab-btn shrink-0 md:w-full whitespace-nowrap text-left px-4 py-2.5 rounded-xl text-sm flex items-center gap-2.5 md:gap-3 hover:bg-deep-800" data-tab="quotes">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
           Quotes
-          <span id="quotes-badge" class="ml-auto bg-wave-400/20 text-wave-300 text-xs px-2 py-0.5 rounded-full font-medium"></span>
+          <span id="quotes-badge" class="md:ml-auto bg-wave-400/20 text-wave-300 text-xs px-2 py-0.5 rounded-full font-medium"></span>
         </button>
-        <button class="tab-btn w-full text-left px-4 py-2.5 rounded-xl text-sm flex items-center gap-3 hover:bg-deep-800" data-tab="portfolio">
+        <button class="tab-btn shrink-0 md:w-full whitespace-nowrap text-left px-4 py-2.5 rounded-xl text-sm flex items-center gap-2.5 md:gap-3 hover:bg-deep-800" data-tab="portfolio">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
           Portfolio
         </button>
-        <button class="tab-btn w-full text-left px-4 py-2.5 rounded-xl text-sm flex items-center gap-3 hover:bg-deep-800" data-tab="hero-image">
+        <button class="tab-btn shrink-0 md:w-full whitespace-nowrap text-left px-4 py-2.5 rounded-xl text-sm flex items-center gap-2.5 md:gap-3 hover:bg-deep-800" data-tab="reviews">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          Reviews
+        </button>
+        <button class="tab-btn shrink-0 md:w-full whitespace-nowrap text-left px-4 py-2.5 rounded-xl text-sm flex items-center gap-2.5 md:gap-3 hover:bg-deep-800" data-tab="hero-image">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 16l5-4 4 5 3-3 6 4"/><circle cx="9" cy="9" r="1.5"/></svg>
           Hero Image
         </button>
       </nav>
 
-      <div class="mt-auto px-3">
+      <div class="hidden md:block mt-auto px-3">
         <div class="bg-deep-800/60 rounded-xl p-3 text-xs text-slate-500 border border-slate-700/40">
           <p class="font-medium text-slate-400 mb-1">Tip</p>
           <p>Changes to content take effect immediately when saved.</p>
@@ -152,45 +118,45 @@
     </aside>
 
     <!-- Main Content -->
-    <main class="flex-1 overflow-y-auto">
+    <main class="flex-1 min-w-0 md:overflow-y-auto">
 
       <!-- ── TAB: DASHBOARD ─────────────────── -->
-      <div id="tab-dashboard" class="tab-panel p-8">
-        <div class="mb-8">
-          <h2 class="text-2xl font-bold text-white">Dashboard</h2>
-          <p class="text-slate-400 text-sm mt-1 font-light">Site statistics &amp; recent activity</p>
+      <div id="tab-dashboard" class="tab-panel p-4 sm:p-6 lg:p-8">
+        <div class="mb-5 sm:mb-8">
+          <h2 class="text-xl sm:text-2xl font-bold text-white">Dashboard</h2>
+          <p class="text-slate-400 text-sm mt-1">Site statistics &amp; recent activity</p>
         </div>
 
         <!-- Stat Cards -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <div class="stat-card rounded-2xl p-5">
-            <p class="text-xs font-medium text-slate-400 uppercase tracking-wider mb-3">Views (30d)</p>
-            <p id="stat-views" class="text-3xl font-bold text-white">—</p>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
+          <div class="stat-card rounded-2xl p-4 sm:p-5">
+            <p class="text-[11px] sm:text-xs font-medium text-slate-400 uppercase tracking-wider mb-2 sm:mb-3">Views (30d)</p>
+            <p id="stat-views" class="text-2xl sm:text-3xl font-bold text-white">—</p>
           </div>
-          <div class="stat-card rounded-2xl p-5">
-            <p class="text-xs font-medium text-slate-400 uppercase tracking-wider mb-3">Unique (30d)</p>
-            <p id="stat-unique" class="text-3xl font-bold text-white">—</p>
+          <div class="stat-card rounded-2xl p-4 sm:p-5">
+            <p class="text-[11px] sm:text-xs font-medium text-slate-400 uppercase tracking-wider mb-2 sm:mb-3">Unique (30d)</p>
+            <p id="stat-unique" class="text-2xl sm:text-3xl font-bold text-white">—</p>
           </div>
-          <div class="stat-card rounded-2xl p-5">
-            <p class="text-xs font-medium text-slate-400 uppercase tracking-wider mb-3">Quotes Total</p>
-            <p id="stat-quotes" class="text-3xl font-bold text-white">—</p>
+          <div class="stat-card rounded-2xl p-4 sm:p-5">
+            <p class="text-[11px] sm:text-xs font-medium text-slate-400 uppercase tracking-wider mb-2 sm:mb-3">Quotes Total</p>
+            <p id="stat-quotes" class="text-2xl sm:text-3xl font-bold text-white">—</p>
           </div>
-          <div class="stat-card rounded-2xl p-5">
-            <p class="text-xs font-medium text-slate-400 uppercase tracking-wider mb-3">Views Today</p>
-            <p id="stat-today" class="text-3xl font-bold text-wave-300">—</p>
+          <div class="stat-card rounded-2xl p-4 sm:p-5">
+            <p class="text-[11px] sm:text-xs font-medium text-slate-400 uppercase tracking-wider mb-2 sm:mb-3">Views Today</p>
+            <p id="stat-today" class="text-2xl sm:text-3xl font-bold text-wave-300">—</p>
           </div>
         </div>
 
         <!-- Chart + Referrers -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <div class="lg:col-span-2 bg-deep-900 border border-slate-700/50 rounded-2xl p-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+          <div class="lg:col-span-2 bg-deep-900 border border-slate-700/50 rounded-2xl p-4 sm:p-6">
             <h3 class="text-sm font-semibold text-white mb-4">Daily Page Views — Last 30 Days</h3>
             <div class="relative h-52">
               <canvas id="views-chart"></canvas>
             </div>
           </div>
 
-          <div class="bg-deep-900 border border-slate-700/50 rounded-2xl p-6">
+          <div class="bg-deep-900 border border-slate-700/50 rounded-2xl p-4 sm:p-6">
             <h3 class="text-sm font-semibold text-white mb-4">Top Referrers</h3>
             <div id="referrers-list" class="space-y-3 text-sm">
               <p class="text-slate-500 text-xs">Loading…</p>
@@ -199,7 +165,7 @@
         </div>
 
         <!-- Recent Quotes -->
-        <div class="bg-deep-900 border border-slate-700/50 rounded-2xl p-6">
+        <div class="bg-deep-900 border border-slate-700/50 rounded-2xl p-4 sm:p-6">
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-sm font-semibold text-white">Recent Quote Requests</h3>
             <button class="tab-btn text-xs text-wave-300 hover:text-wave-400 transition" data-tab="quotes">View All →</button>
@@ -211,13 +177,13 @@
       </div>
 
       <!-- ── TAB: CONTENT EDITOR ─────────────────── -->
-      <div id="tab-content" class="tab-panel hidden p-8">
-        <div class="mb-8 flex items-start justify-between">
+      <div id="tab-content" class="tab-panel hidden p-4 sm:p-6 lg:p-8">
+        <div class="mb-5 sm:mb-8 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div>
-            <h2 class="text-2xl font-bold text-white">Content Editor</h2>
-            <p class="text-slate-400 text-sm mt-1 font-light">Edit the text and links displayed on your website</p>
+            <h2 class="text-xl sm:text-2xl font-bold text-white">Content Editor</h2>
+            <p class="text-slate-400 text-sm mt-1">Edit the text and links displayed on your website</p>
           </div>
-          <button id="save-all-btn" class="px-5 py-2 rounded-xl bg-wave-400 hover:bg-wave-500 text-deep-950 font-semibold text-sm transition">
+          <button id="save-all-btn" class="w-full sm:w-auto shrink-0 px-5 py-3 sm:py-2 rounded-xl bg-wave-400 hover:bg-wave-500 text-deep-950 font-semibold text-sm transition">
             Save All Changes
           </button>
         </div>
@@ -229,10 +195,10 @@
       </div>
 
       <!-- ── TAB: QUOTES ─────────────────── -->
-      <div id="tab-quotes" class="tab-panel hidden p-8">
-        <div class="mb-8">
-          <h2 class="text-2xl font-bold text-white">Quote Requests</h2>
-          <p class="text-slate-400 text-sm mt-1 font-light">All submissions from the contact form</p>
+      <div id="tab-quotes" class="tab-panel hidden p-4 sm:p-6 lg:p-8">
+        <div class="mb-5 sm:mb-8">
+          <h2 class="text-xl sm:text-2xl font-bold text-white">Quote Requests</h2>
+          <p class="text-slate-400 text-sm mt-1">All submissions from the contact form</p>
         </div>
 
         <!-- Search -->
@@ -241,11 +207,15 @@
             id="quotes-search"
             type="text"
             placeholder="Search by name, phone, or message…"
-            class="w-full max-w-md px-4 py-2.5 rounded-xl bg-deep-900 border border-slate-600 text-white placeholder-slate-500 focus:outline-none focus:border-wave-400 focus:ring-1 focus:ring-wave-400 transition text-sm"
+            class="w-full md:max-w-md px-4 py-2.5 rounded-xl bg-deep-900 border border-slate-600 text-white placeholder:text-slate-500 focus:outline-none focus:border-wave-400 focus:ring-1 focus:ring-wave-400 transition text-sm"
           />
         </div>
 
-        <div class="bg-deep-900 border border-slate-700/50 rounded-2xl overflow-hidden">
+        <!-- Phones: one card per quote -->
+        <div id="quotes-cards" class="md:hidden space-y-3"></div>
+
+        <!-- Tablets and up: table -->
+        <div class="hidden md:block bg-deep-900 border border-slate-700/50 rounded-2xl overflow-x-auto">
           <table class="w-full text-sm">
             <thead>
               <tr class="border-b border-slate-700/60 bg-deep-800/50">
@@ -261,21 +231,21 @@
               <tr><td colspan="6" class="px-5 py-8 text-slate-500 text-xs text-center">Loading&hellip;</td></tr>
             </tbody>
           </table>
-          <div id="quotes-empty" class="hidden px-5 py-12 text-center">
-            <p class="text-slate-500 text-sm">No quotes found.</p>
-          </div>
+        </div>
+        <div id="quotes-empty" class="hidden px-5 py-12 text-center bg-deep-900 border border-slate-700/50 rounded-2xl">
+          <p class="text-slate-500 text-sm">No quotes found.</p>
         </div>
       </div>
 
       <!-- ── TAB: PORTFOLIO ─────────────────── -->
-      <div id="tab-portfolio" class="tab-panel hidden p-8">
-        <div class="mb-8">
-          <h2 class="text-2xl font-bold text-white">Portfolio</h2>
-          <p class="text-slate-400 text-sm mt-1 font-light">Upload photos. Toggle the <strong class="text-wave-300">Gallery</strong> star to feature up to 10 on the home page.</p>
+      <div id="tab-portfolio" class="tab-panel hidden p-4 sm:p-6 lg:p-8">
+        <div class="mb-5 sm:mb-8">
+          <h2 class="text-xl sm:text-2xl font-bold text-white">Portfolio</h2>
+          <p class="text-slate-400 text-sm mt-1">Upload photos. Toggle the <strong class="text-wave-300">Gallery</strong> star to feature up to 10 on the home page.</p>
         </div>
 
         <!-- Upload form -->
-        <div class="bg-deep-900 border border-slate-700/50 rounded-2xl p-6 mb-8 max-w-xl">
+        <div class="bg-deep-900 border border-slate-700/50 rounded-2xl p-4 sm:p-6 mb-8 max-w-xl">
           <h3 class="text-sm font-semibold text-white mb-4">Upload New Photo</h3>
           <form id="portfolio-upload-form" class="space-y-4">
             <div>
@@ -285,47 +255,47 @@
             </div>
             <div>
               <label class="block text-xs font-medium text-slate-400 mb-1.5">Caption <span class="text-slate-500">(optional)</span></label>
-              <input id="portfolio-caption" type="text" placeholder="e.g. Residential job in La Jolla" maxlength="200"
-                class="w-full px-4 py-2.5 rounded-xl bg-deep-950 border border-slate-600 text-white placeholder-slate-500 focus:outline-none focus:border-wave-400 focus:ring-1 focus:ring-wave-400 transition text-sm" />
+              <input id="portfolio-caption" type="text" placeholder="e.g. Oceanfront home, second story" maxlength="200"
+                class="w-full px-4 py-2.5 rounded-xl bg-deep-950 border border-slate-600 text-white placeholder:text-slate-500 focus:outline-none focus:border-wave-400 focus:ring-1 focus:ring-wave-400 transition text-sm" />
             </div>
             <button type="submit" id="portfolio-upload-btn"
-              class="px-5 py-2 rounded-xl bg-wave-400 hover:bg-wave-500 text-deep-950 font-semibold text-sm transition">
+              class="w-full sm:w-auto px-5 py-3 sm:py-2 rounded-xl bg-wave-400 hover:bg-wave-500 text-deep-950 font-semibold text-sm transition">
               Upload Photo
             </button>
           </form>
         </div>
 
         <!-- Photo grid -->
-        <div id="portfolio-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div id="portfolio-grid" class="grid grid-cols-1 min-[420px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
           <p class="text-slate-500 text-xs col-span-full">Loading…</p>
         </div>
       </div>
 
       <!-- ── TAB: REVIEWS ─────────────────── -->
-      <div id="tab-reviews" class="tab-panel hidden p-8">
-        <div class="mb-8">
-          <h2 class="text-2xl font-bold text-white">Google Reviews</h2>
-          <p class="text-slate-400 text-sm mt-1 font-light">Choose up to 3 Google reviews to display on the home page</p>
+      <div id="tab-reviews" class="tab-panel hidden p-4 sm:p-6 lg:p-8">
+        <div class="mb-5 sm:mb-8">
+          <h2 class="text-xl sm:text-2xl font-bold text-white">Google Reviews</h2>
+          <p class="text-slate-400 text-sm mt-1">Add up to 3 Google reviews to show on the home page</p>
         </div>
         <div class="space-y-6 max-w-2xl" id="reviews-editor">
           <!-- populated by JS -->
         </div>
         <div class="mt-6">
-          <button id="save-reviews-btn" class="px-5 py-2 rounded-xl bg-wave-400 hover:bg-wave-500 text-deep-950 font-semibold text-sm transition">
+          <button id="save-reviews-btn" class="w-full sm:w-auto px-5 py-3 sm:py-2 rounded-xl bg-wave-400 hover:bg-wave-500 text-deep-950 font-semibold text-sm transition">
             Save Reviews
           </button>
         </div>
       </div>
 
       <!-- ── TAB: HERO IMAGE ─────────────────── -->
-      <div id="tab-hero-image" class="tab-panel hidden p-8">
-        <div class="mb-8">
-          <h2 class="text-2xl font-bold text-white">Hero Background</h2>
-          <p class="text-slate-400 text-sm mt-1 font-light">Upload a custom background image for the front page hero section</p>
+      <div id="tab-hero-image" class="tab-panel hidden p-4 sm:p-6 lg:p-8">
+        <div class="mb-5 sm:mb-8">
+          <h2 class="text-xl sm:text-2xl font-bold text-white">Hero Background</h2>
+          <p class="text-slate-400 text-sm mt-1">Upload a custom background image for the front page hero section</p>
         </div>
 
         <!-- Current image preview -->
-        <div class="bg-deep-900 border border-slate-700/50 rounded-2xl p-6 mb-6 max-w-2xl">
+        <div class="bg-deep-900 border border-slate-700/50 rounded-2xl p-4 sm:p-6 mb-6 max-w-2xl">
           <h3 class="text-sm font-semibold text-white mb-4">Current Background</h3>
           <div class="relative w-full rounded-xl overflow-hidden bg-deep-800 mb-4" style="aspect-ratio:16/7;">
             <img id="hero-preview-img" src="" alt="Current hero background" class="w-full h-full object-cover hidden" />
@@ -333,16 +303,16 @@
               <p class="text-slate-500 text-sm">Loading&hellip;</p>
             </div>
           </div>
-          <div class="flex items-center gap-3">
-            <button id="hero-reset-btn" class="px-4 py-2 rounded-xl border border-slate-600 text-slate-400 hover:text-white hover:border-slate-400 text-sm transition">
+          <div class="flex flex-col sm:flex-row sm:items-center gap-3 min-w-0">
+            <button id="hero-reset-btn" class="shrink-0 px-4 py-2.5 sm:py-2 rounded-xl border border-slate-600 text-slate-400 hover:text-white hover:border-slate-400 text-sm transition">
               Reset to Default
             </button>
-            <span id="hero-current-url" class="text-xs text-slate-500 font-mono truncate"></span>
+            <span id="hero-current-url" class="text-xs text-slate-500 font-mono truncate min-w-0"></span>
           </div>
         </div>
 
         <!-- Upload form -->
-        <div class="bg-deep-900 border border-slate-700/50 rounded-2xl p-6 max-w-2xl">
+        <div class="bg-deep-900 border border-slate-700/50 rounded-2xl p-4 sm:p-6 max-w-2xl">
           <h3 class="text-sm font-semibold text-white mb-4">Upload New Background</h3>
           <form id="hero-upload-form" class="space-y-4">
             <div>
@@ -355,7 +325,7 @@
               <img id="hero-new-preview-img" src="" alt="New background preview" class="w-full h-full object-cover" />
             </div>
             <button type="submit" id="hero-upload-btn"
-              class="px-5 py-2 rounded-xl bg-wave-400 hover:bg-wave-500 text-deep-950 font-semibold text-sm transition">
+              class="w-full sm:w-auto px-5 py-3 sm:py-2 rounded-xl bg-wave-400 hover:bg-wave-500 text-deep-950 font-semibold text-sm transition">
               Upload &amp; Apply
             </button>
           </form>
@@ -367,7 +337,7 @@
 </div>
 
 <!-- Toast -->
-<div id="toast" class="fixed bottom-6 right-6 z-50 opacity-0 translate-y-4 pointer-events-none">
+<div id="toast" class="fixed bottom-4 left-4 right-4 sm:left-auto sm:bottom-6 sm:right-6 z-50 flex justify-center sm:block opacity-0 translate-y-4 pointer-events-none">
   <div id="toast-inner" class="px-5 py-3 rounded-xl shadow-xl text-sm font-medium flex items-center gap-3"></div>
 </div>
 
@@ -506,6 +476,10 @@ function switchTab(tab) {
   document.querySelectorAll('.tab-panel').forEach((p) => {
     p.classList.toggle('hidden', p.id !== `tab-${tab}`);
   });
+  // Phones: keep the chosen tab visible in the scrolling tab bar and start at the top
+  const activeBtn = document.querySelector(`.tab-nav .tab-btn[data-tab="${tab}"]`);
+  activeBtn?.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
+  if (window.matchMedia('(max-width: 767px)').matches) window.scrollTo({ top: 0 });
 }
 
 // ────────────────────────────
@@ -554,7 +528,7 @@ function renderChart(dailyViews) {
       datasets: [{
         label: 'Page Views',
         data: counts,
-        backgroundColor: 'rgba(0, 180, 216, 0.5)',
+        backgroundColor: 'rgba(242, 106, 61, 0.45)',
         borderColor: '#F26A3D',
         borderWidth: 1,
         borderRadius: 4,
@@ -566,11 +540,11 @@ function renderChart(dailyViews) {
       plugins: { legend: { display: false } },
       scales: {
         x: {
-          ticks: { color: '#64748b', maxTicksLimit: 10, font: { family: 'Lexend', size: 10 } },
+          ticks: { color: '#64748b', maxTicksLimit: 10, font: { family: 'Inter', size: 10 } },
           grid: { color: 'rgba(255,255,255,0.03)' },
         },
         y: {
-          ticks: { color: '#64748b', stepSize: 1, font: { family: 'Lexend', size: 10 } },
+          ticks: { color: '#64748b', stepSize: 1, font: { family: 'Inter', size: 10 } },
           grid: { color: 'rgba(255,255,255,0.05)' },
           beginAtZero: true,
         },
@@ -585,7 +559,7 @@ function renderReferrers(refs) {
   el.innerHTML = refs.map((r) => `
     <div class="flex items-center justify-between gap-2">
       <span class="text-slate-300 truncate text-xs flex-1" title="${r.referrer || 'Direct'}">${r.referrer ? new URL(r.referrer.startsWith('http') ? r.referrer : 'https://' + r.referrer).hostname.replace('www.', '') : 'Direct / None'}</span>
-      <span class="text-wave-400 text-xs font-semibold tabular-nums flex-shrink-0">${r.count}</span>
+      <span class="text-wave-400 text-xs font-semibold tabular-nums shrink-0">${r.count}</span>
     </div>
   `).join('');
 }
@@ -595,13 +569,13 @@ function renderRecentQuotes(quotes) {
   if (!quotes.length) { el.innerHTML = '<p class="text-slate-500 text-xs">No quotes yet.</p>'; return; }
   el.innerHTML = quotes.slice(0, 5).map((q) => `
     <div class="flex items-start gap-4 py-3 border-b border-slate-700/40 last:border-0">
-      <div class="w-9 h-9 rounded-full bg-wave-400/15 border border-wave-400/30 flex items-center justify-center text-wave-300 font-semibold text-sm flex-shrink-0">
+      <div class="w-9 h-9 rounded-full bg-wave-400/15 border border-wave-400/30 flex items-center justify-center text-wave-300 font-semibold text-sm shrink-0">
         ${(q.name || '?')[0].toUpperCase()}
       </div>
       <div class="flex-1 min-w-0">
         <div class="flex items-center justify-between gap-2 mb-0.5">
-          <span class="text-sm font-medium text-white">${escHtml(q.name)}</span>
-          <span class="text-xs text-slate-500 flex-shrink-0">${formatDate(q.created_at)}</span>
+          <span class="text-sm font-medium text-white truncate">${escHtml(q.name)}</span>
+          <span class="text-xs text-slate-500 shrink-0">${formatDate(q.created_at)}</span>
         </div>
         <p class="text-xs text-slate-400 truncate">${escHtml(q.message || '(no message)')}</p>
       </div>
@@ -690,7 +664,7 @@ function renderContentEditor() {
     const acc = document.createElement('div');
     acc.className = 'bg-deep-900 border border-slate-700/50 rounded-2xl overflow-hidden';
     acc.innerHTML = `
-      <button class="accordion-toggle w-full flex items-center justify-between px-6 py-4 text-left hover:bg-deep-800/50 transition" data-section="${section.id}">
+      <button class="accordion-toggle w-full flex items-center justify-between gap-3 px-4 sm:px-6 py-4 text-left hover:bg-deep-800/50 transition" data-section="${section.id}">
         <div class="flex items-center gap-3">
           <span class="text-wave-400 text-lg leading-none">${section.icon}</span>
           <span class="font-semibold text-white text-sm">${section.label}</span>
@@ -698,10 +672,10 @@ function renderContentEditor() {
         <svg class="accordion-icon w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
       </button>
       <div class="accordion-body ${si === 0 ? 'open' : ''}" id="acc-${section.id}">
-        <div class="px-6 pb-6 pt-2 space-y-5 border-t border-slate-700/40">
+        <div class="px-4 sm:px-6 pb-5 sm:pb-6 pt-4 space-y-5 border-t border-slate-700/40">
           ${section.fields.map((f) => renderField(f)).join('')}
-          <div class="flex items-center justify-between pt-2">
-            <button class="save-section-btn px-4 py-2 rounded-lg bg-wave-400 hover:bg-wave-500 text-deep-950 font-semibold text-xs transition" data-section="${section.id}">
+          <div class="flex items-center justify-between gap-3 pt-2">
+            <button class="save-section-btn px-4 py-2.5 rounded-lg bg-wave-400 hover:bg-wave-500 text-deep-950 font-semibold text-xs transition" data-section="${section.id}">
               Save ${section.label}
             </button>
             <span class="save-status-${section.id} text-xs text-emerald-400 opacity-0 transition-opacity">Saved!</span>
@@ -748,7 +722,7 @@ function renderField(f) {
           id="${fieldId}"
           data-key="${f.key}"
           rows="3"
-          class="content-field w-full px-3 py-2 rounded-lg bg-deep-950 border border-slate-600 text-white text-sm resize-y focus:outline-none focus:border-wave-400 focus:ring-1 focus:ring-wave-400 transition"
+          class="content-field w-full px-3 py-2.5 rounded-lg bg-deep-950 border border-slate-600 text-white text-sm resize-y focus:outline-none focus:border-wave-400 focus:ring-1 focus:ring-wave-400 transition"
         >${val}</textarea>
         ${hint}
       </div>`;
@@ -761,7 +735,7 @@ function renderField(f) {
         type="${f.type || 'text'}"
         data-key="${f.key}"
         value="${val}"
-        class="content-field w-full px-3 py-2 rounded-lg bg-deep-950 border border-slate-600 text-white text-sm focus:outline-none focus:border-wave-400 focus:ring-1 focus:ring-wave-400 transition"
+        class="content-field w-full px-3 py-2.5 rounded-lg bg-deep-950 border border-slate-600 text-white text-sm focus:outline-none focus:border-wave-400 focus:ring-1 focus:ring-wave-400 transition"
       />
       ${hint}
     </div>`;
@@ -836,18 +810,37 @@ async function loadQuotes() {
     renderQuotesTable(allQuotes);
   } catch {
     document.getElementById('quotes-tbody').innerHTML = '<tr><td colspan="6" class="px-5 py-8 text-red-400 text-xs text-center">Failed to load quotes.</td></tr>';
+    document.getElementById('quotes-cards').innerHTML = '<p class="text-red-400 text-sm text-center py-8">Failed to load quotes.</p>';
   }
 }
 
 function renderQuotesTable(quotes) {
   const tbody = document.getElementById('quotes-tbody');
+  const cards = document.getElementById('quotes-cards');
   const empty = document.getElementById('quotes-empty');
   if (!quotes.length) {
     tbody.innerHTML = '';
+    cards.innerHTML = '';
     empty.classList.remove('hidden');
     return;
   }
   empty.classList.add('hidden');
+  cards.innerHTML = quotes.map((q) => `
+    <article class="bg-deep-900 border border-slate-700/50 rounded-2xl p-4">
+      <div class="flex items-start justify-between gap-3">
+        <h3 class="font-semibold text-white text-base break-words min-w-0">${escHtml(q.name)}</h3>
+        <span class="text-xs text-slate-500 shrink-0 pt-1">${formatDateShort(q.created_at)}</span>
+      </div>
+      ${q.message ? `<p class="text-sm text-slate-300 mt-2 whitespace-pre-line break-words">${escHtml(q.message)}</p>` : ''}
+      ${q.address ? `<p class="text-xs text-slate-400 mt-2 break-words"><span class="text-slate-500">Address:</span> ${escHtml(q.address)}</p>` : ''}
+      ${q.source ? `<p class="text-xs text-slate-400 mt-1"><span class="text-slate-500">Heard via:</span> ${escHtml(q.source)}</p>` : ''}
+      <div class="grid grid-cols-2 gap-2 mt-3">
+        <a href="tel:${escAttr(q.phone)}" class="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-wave-400 text-deep-950 font-semibold text-sm">Call</a>
+        <a href="sms:${escAttr(q.phone)}" class="flex items-center justify-center gap-2 py-2.5 rounded-xl border border-slate-600 text-slate-200 font-medium text-sm">Text</a>
+      </div>
+      <p class="text-xs text-slate-500 mt-2 text-center">${escHtml(q.phone)}</p>
+    </article>
+  `).join('');
   tbody.innerHTML = quotes.map((q) => `
     <tr class="border-b border-slate-700/30 hover:bg-deep-800/40 transition">
       <td class="px-5 py-3.5 font-medium text-white">${escHtml(q.name)}</td>
@@ -904,12 +897,12 @@ async function loadPortfolio() {
           class="w-full aspect-square object-cover" />
         <div class="p-3">
           <input type="text" value="${escAttr(item.caption)}" placeholder="Caption…" maxlength="200"
-            class="portfolio-caption-input w-full text-xs bg-deep-950 border border-slate-600 rounded-lg px-2 py-1.5 text-white placeholder-slate-500 focus:outline-none focus:border-wave-400 transition"
+            class="portfolio-caption-input w-full text-xs bg-deep-950 border border-slate-600 rounded-lg px-2.5 py-2 text-white placeholder:text-slate-500 focus:outline-none focus:border-wave-400 transition"
             data-id="${item.id}" />
           <div class="flex gap-2 mt-2">
-            <button class="portfolio-feat-btn flex-none px-2.5 py-1.5 rounded-lg text-xs font-medium transition ${item.featured ? 'bg-amber-400/20 text-amber-300 border border-amber-400/40' : 'bg-deep-950 text-slate-400 border border-slate-700 hover:border-amber-400/40 hover:text-amber-300'}" data-id="${item.id}" data-featured="${item.featured ? '1' : '0'}" title="Toggle homepage gallery">★</button>
-            <button class="portfolio-save-btn flex-1 text-xs py-1.5 rounded-lg bg-wave-400/20 hover:bg-wave-400/30 text-wave-300 font-medium transition" data-id="${item.id}">Save</button>
-            <button class="portfolio-delete-btn px-3 py-1.5 rounded-lg bg-red-500/15 hover:bg-red-500/25 text-red-400 text-xs font-medium transition" data-id="${item.id}">Delete</button>
+            <button class="portfolio-feat-btn flex-none px-3 py-2 rounded-lg text-xs font-medium transition ${item.featured ? 'bg-amber-400/20 text-amber-300 border border-amber-400/40' : 'bg-deep-950 text-slate-400 border border-slate-700 hover:border-amber-400/40 hover:text-amber-300'}" data-id="${item.id}" data-featured="${item.featured ? '1' : '0'}" title="Toggle homepage gallery">★</button>
+            <button class="portfolio-save-btn flex-1 text-xs py-2 rounded-lg bg-wave-400/20 hover:bg-wave-400/30 text-wave-300 font-medium transition" data-id="${item.id}">Save</button>
+            <button class="portfolio-delete-btn px-3 py-2 rounded-lg bg-red-500/15 hover:bg-red-500/25 text-red-400 text-xs font-medium transition" data-id="${item.id}">Delete</button>
           </div>
         </div>
       </div>
@@ -924,9 +917,9 @@ async function loadPortfolio() {
         if (r.ok) {
           btn.dataset.featured = String(newFeatured);
           if (newFeatured) {
-            btn.className = 'portfolio-feat-btn flex-none px-2.5 py-1.5 rounded-lg text-xs font-medium transition bg-amber-400/20 text-amber-300 border border-amber-400/40';
+            btn.className = 'portfolio-feat-btn flex-none px-3 py-2 rounded-lg text-xs font-medium transition bg-amber-400/20 text-amber-300 border border-amber-400/40';
           } else {
-            btn.className = 'portfolio-feat-btn flex-none px-2.5 py-1.5 rounded-lg text-xs font-medium transition bg-deep-950 text-slate-400 border border-slate-700 hover:border-amber-400/40 hover:text-amber-300';
+            btn.className = 'portfolio-feat-btn flex-none px-3 py-2 rounded-lg text-xs font-medium transition bg-deep-950 text-slate-400 border border-slate-700 hover:border-amber-400/40 hover:text-amber-300';
           }
           showToast(newFeatured ? 'Added to homepage gallery ★' : 'Removed from homepage gallery');
         } else {
@@ -1009,20 +1002,20 @@ function renderReviewsEditor() {
   const editor = document.getElementById('reviews-editor');
   if (!editor) return;
   editor.innerHTML = currentReviews.map((r, i) => `
-    <div class="bg-deep-900 border border-slate-700/50 rounded-2xl p-6">
+    <div class="bg-deep-900 border border-slate-700/50 rounded-2xl p-4 sm:p-6">
       <p class="text-xs font-semibold text-wave-300 uppercase tracking-wider mb-4">Review ${i + 1}</p>
       <div class="space-y-3">
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-medium text-slate-400 mb-1">Customer Name</label>
             <input type="text" maxlength="100" placeholder="Jane D." value="${escAttr(r.name)}"
-              class="review-name w-full text-sm px-3 py-2 rounded-lg bg-deep-950 border border-slate-600 text-white placeholder-slate-500 focus:outline-none focus:border-wave-400 transition"
+              class="review-name w-full text-sm px-3 py-2 rounded-lg bg-deep-950 border border-slate-600 text-white placeholder:text-slate-500 focus:outline-none focus:border-wave-400 transition"
               data-idx="${i}" />
           </div>
           <div>
             <label class="block text-xs font-medium text-slate-400 mb-1">Date</label>
             <input type="text" maxlength="50" placeholder="May 2025" value="${escAttr(r.date)}"
-              class="review-date w-full text-sm px-3 py-2 rounded-lg bg-deep-950 border border-slate-600 text-white placeholder-slate-500 focus:outline-none focus:border-wave-400 transition"
+              class="review-date w-full text-sm px-3 py-2 rounded-lg bg-deep-950 border border-slate-600 text-white placeholder:text-slate-500 focus:outline-none focus:border-wave-400 transition"
               data-idx="${i}" />
           </div>
         </div>
@@ -1035,7 +1028,7 @@ function renderReviewsEditor() {
         <div>
           <label class="block text-xs font-medium text-slate-400 mb-1">Review Text</label>
           <textarea maxlength="1000" rows="3" placeholder="Amazing service! Would highly recommend…"
-            class="review-text w-full text-sm px-3 py-2 rounded-lg bg-deep-950 border border-slate-600 text-white placeholder-slate-500 focus:outline-none focus:border-wave-400 transition resize-none"
+            class="review-text w-full text-sm px-3 py-2 rounded-lg bg-deep-950 border border-slate-600 text-white placeholder:text-slate-500 focus:outline-none focus:border-wave-400 transition resize-none"
             data-idx="${i}">${escHtml(r.text)}</textarea>
         </div>
       </div>
