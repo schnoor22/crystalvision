@@ -225,10 +225,11 @@
                 <th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-slate-400 hidden md:table-cell">Message</th>
                 <th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-slate-400 hidden xl:table-cell">Source</th>
                 <th class="text-right px-5 py-3 text-xs font-semibold uppercase tracking-wider text-slate-400">Date</th>
+                <th class="px-3 py-3"><span class="sr-only">Delete</span></th>
               </tr>
             </thead>
             <tbody id="quotes-tbody">
-              <tr><td colspan="6" class="px-5 py-8 text-slate-500 text-xs text-center">Loading&hellip;</td></tr>
+              <tr><td colspan="7" class="px-5 py-8 text-slate-500 text-xs text-center">Loading&hellip;</td></tr>
             </tbody>
           </table>
         </div>
@@ -812,7 +813,7 @@ async function loadQuotes() {
     if (allQuotes.length) badge.textContent = allQuotes.length;
     renderQuotesTable(allQuotes);
   } catch {
-    document.getElementById('quotes-tbody').innerHTML = '<tr><td colspan="6" class="px-5 py-8 text-red-400 text-xs text-center">Failed to load quotes.</td></tr>';
+    document.getElementById('quotes-tbody').innerHTML = '<tr><td colspan="7" class="px-5 py-8 text-red-400 text-xs text-center">Failed to load quotes.</td></tr>';
     document.getElementById('quotes-cards').innerHTML = '<p class="text-red-400 text-sm text-center py-8">Failed to load quotes.</p>';
   }
 }
@@ -842,7 +843,10 @@ function renderQuotesTable(quotes) {
         <a href="tel:${escAttr(q.phone)}" class="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-wave-400 text-deep-950 font-semibold text-sm">Call</a>
         <a href="sms:${escAttr(q.phone)}" class="flex items-center justify-center gap-2 py-2.5 rounded-xl border border-slate-600 text-slate-200 font-medium text-sm">Text</a>
       </div>
-      <p class="text-xs text-slate-500 mt-2 text-center">${escHtml(q.phone)}</p>
+      <div class="flex items-center justify-between mt-3 pt-3 border-t border-slate-700/40">
+        <span class="text-xs text-slate-500">${escHtml(q.phone)}</span>
+        <button type="button" data-delete-quote="${Number(q.id)}" class="text-xs font-medium text-red-400 hover:text-red-300 px-2 py-1.5 -mr-2">Delete</button>
+      </div>
     </article>
   `).join('');
   tbody.innerHTML = quotes.map((q) => `
@@ -858,6 +862,9 @@ function renderQuotesTable(quotes) {
       </td>
       <td class="px-5 py-3.5 text-slate-400 hidden xl:table-cell text-xs">${escHtml(q.source || '—')}</td>
       <td class="px-5 py-3.5 text-slate-500 text-xs text-right whitespace-nowrap">${formatDate(q.created_at)}</td>
+      <td class="px-3 py-3.5 text-right">
+        <button type="button" data-delete-quote="${Number(q.id)}" class="text-slate-500 hover:text-red-400 transition p-1.5" title="Delete quote" aria-label="Delete quote from ${escAttr(q.name)}"><i class="ph ph-trash text-base"></i></button>
+      </td>
     </tr>
   `).join('');
 }
@@ -871,6 +878,27 @@ function quotePhotosHtml(q, wrapClass, imgClass) {
       <img src="${escAttr(u)}" alt="Photo ${i + 1} from ${escAttr(q.name)}" loading="lazy" class="${imgClass} object-cover rounded-lg border border-slate-700/60" />
     </a>`).join('')}</div>`;
 }
+
+// Delete a quote (and its photos) after confirming
+async function deleteQuote(id) {
+  const q = allQuotes.find((x) => Number(x.id) === id);
+  if (!q) return;
+  if (!confirm(`Delete the quote from ${q.name}? This cannot be undone.`)) return;
+  const r = await api(`/api/admin/quotes/${id}`, { method: 'DELETE' });
+  if (!r.ok && r.status !== 404) { showToast('Delete failed.', false); return; }
+  allQuotes = allQuotes.filter((x) => Number(x.id) !== id);
+  document.getElementById('quotes-badge').textContent = allQuotes.length || '';
+  document.getElementById('quotes-search').dispatchEvent(new Event('input'));
+  showToast('Quote deleted.');
+  loadDashboard();
+}
+
+['quotes-cards', 'quotes-tbody'].forEach((elId) => {
+  document.getElementById(elId).addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-delete-quote]');
+    if (btn) deleteQuote(Number(btn.dataset.deleteQuote));
+  });
+});
 
 document.getElementById('quotes-search').addEventListener('input', (e) => {
   const q = e.target.value.toLowerCase();

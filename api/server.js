@@ -23,6 +23,7 @@
  *   PUT    /api/admin/content
  *   GET    /api/admin/stats
  *   GET    /api/admin/quotes
+ *   DELETE /api/admin/quotes/:id
  *   POST   /api/admin/portfolio
  *   PATCH  /api/admin/portfolio/:id
  *   DELETE /api/admin/portfolio/:id
@@ -485,6 +486,30 @@ app.get('/api/admin/quotes', requireAuth, async (_req, res) => {
   } catch (err) {
     console.error('Quotes error:', err);
     res.status(500).json({ error: 'Failed to load quotes.' });
+  }
+});
+
+app.delete('/api/admin/quotes/:id', requireAuth, async (req, res) => {
+  try {
+    await dbMigrations;
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id < 1) return res.status(400).json({ error: 'Invalid quote id.' });
+    const result = await db.execute({ sql: 'SELECT photos FROM quotes WHERE id = ?', args: [id] });
+    if (!result.rows.length) return res.status(404).json({ error: 'Not found.' });
+
+    // Remove the customer's photos from Vercel Blob too
+    let photos = [];
+    try { photos = JSON.parse(result.rows[0].photos || '[]'); } catch { /* ignore */ }
+    photos = (Array.isArray(photos) ? photos : []).filter(u => typeof u === 'string' && /^https:\/\//.test(u));
+    if (photos.length) {
+      try { await del(photos); } catch (e) { console.error('Quote photo delete failed:', e.message); }
+    }
+
+    await db.execute({ sql: 'DELETE FROM quotes WHERE id = ?', args: [id] });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Quote delete error:', err);
+    res.status(500).json({ error: 'Delete failed.' });
   }
 });
 
