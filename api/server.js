@@ -47,7 +47,7 @@ try { sharp = require('sharp'); } catch { sharp = null; }
 // ─── Config ──────────────────────────────────────────────────
 
 const PORT           = process.env.PORT           || 3000;
-const OWNER_EMAIL    = process.env.OWNER_EMAIL    || 'info@crystalvisionusa.com';
+const OWNER_EMAIL    = process.env.OWNER_EMAIL    || 'info@firstlightclean.com';
 const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'changeme123';
 
@@ -185,7 +185,7 @@ function getDefaultContent() {
       name: 'First Light Window Cleaning',
       phone: '(808) 829-9020',
       phoneUrl: 'tel:+18088299020',
-      email: 'info@crystalvisionusa.com',
+      email: 'info@firstlightclean.com',
       instagramUrl: 'https://www.instagram.com/crystalvisionusa/',
       payInvoiceUrl: 'https://venmo.com/u/Kidschmid',
     },
