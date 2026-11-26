@@ -508,16 +508,19 @@ function renderChart(dailyViews) {
   const canvas = document.getElementById('views-chart');
   if (!canvas) return;
 
-  // Fill 30 days
+  // The API returns rows of { day: 'YYYY-MM-DD', views: n }, grouped by UTC
+  // date (SQLite date()). Build the 30 day keys in UTC too so they line up.
+  const byDay = new Map(
+    dailyViews.map((dv) => [dv.day ?? dv.date, Number(dv.views ?? dv.count ?? 0)])
+  );
   const days = [];
   const counts = [];
   for (let i = 29; i >= 0; i--) {
     const d = new Date();
-    d.setDate(d.getDate() - i);
+    d.setUTCDate(d.getUTCDate() - i);
     const key = d.toISOString().split('T')[0];
-    const match = dailyViews.find((dv) => dv.date === key);
-    days.push(i === 0 ? 'Today' : formatDateShort(key));
-    counts.push(match ? match.count : 0);
+    days.push(i === 0 ? 'Today' : formatDateShort(key + 'T12:00:00Z'));
+    counts.push(byDay.get(key) || 0);
   }
 
   if (viewsChart) viewsChart.destroy();
@@ -544,7 +547,7 @@ function renderChart(dailyViews) {
           grid: { color: 'rgba(255,255,255,0.03)' },
         },
         y: {
-          ticks: { color: '#64748b', stepSize: 1, font: { family: 'Inter', size: 10 } },
+          ticks: { color: '#64748b', precision: 0, font: { family: 'Inter', size: 10 } },
           grid: { color: 'rgba(255,255,255,0.05)' },
           beginAtZero: true,
         },
