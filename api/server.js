@@ -284,12 +284,39 @@ app.get('/api/content', async (_req, res) => {
   }
 });
 
+// ─── Bot filtering ───────────────────────────────────────────
+// Crawlers, link previewers, uptime checkers, scripts and headless browsers.
+// Plain lowercase substrings so the same list can filter stored rows in SQL.
+const BOT_UA_PATTERNS = [
+  'bot', 'crawl', 'spider', 'slurp', 'headless', 'lighthouse', 'pagespeed',
+  'gtmetrix', 'pingdom', 'uptime', 'monitor', 'preview', 'facebookexternalhit',
+  'embedly', 'whatsapp', 'semrush', 'ahrefs', 'python', 'curl', 'wget', 'axios',
+  'node-fetch', 'undici', 'go-http', 'okhttp', 'java/', 'httpclient', 'scrapy',
+  'phantom', 'puppeteer', 'playwright', 'selenium', 'vercel', 'datadog',
+];
+
+function isBotUA(ua) {
+  const s = String(ua || '').toLowerCase();
+  if (s.length < 20) return true; // missing or junk user agent
+  return BOT_UA_PATTERNS.some((p) => s.includes(p));
+}
+
+// SQL condition that keeps only human-looking rows in page_views
+// (also cleans up bot rows recorded before the filter existed).
+const HUMAN_VIEW_SQL = [
+  'length(user_agent) >= 20',
+  ...BOT_UA_PATTERNS.map((p) => `lower(user_agent) NOT LIKE '%${p}%'`),
+].join(' AND ');
+
 app.post('/api/track', trackLimiter, async (req, res) => {
   try {
     await dbReady;
     const ip       = (req.headers['x-forwarded-for'] || req.ip || '').split(',')[0].trim().substring(0, 100);
     const referrer = (req.body?.referrer  || '').substring(0, 500);
-    const ua       = (req.body?.userAgent || '').substring(0, 300);
+    const ua       = (req.headers['user-agent'] || req.body?.userAgent || '').substring(0, 300);
+    if (isBotUA(ua) || (req.body?.userAgent && isBotUA(req.body.userAgent))) {
+      return res.json({ ok: true }); // quietly ignore bots
+    }
     await db.execute({
       sql:  'INSERT INTO page_views (ip, referrer, user_agent) VALUES (?, ?, ?)',
       args: [ip, referrer, ua],
@@ -397,15 +424,16 @@ app.get('/api/admin/stats', requireAuth, async (_req, res) => {
       totalQuotes, quotesThisWeek,
       dailyViewsResult, topReferrersResult, recentQuotesResult,
     ] = await Promise.all([
-      db.execute(`SELECT COUNT(*) as n FROM page_views WHERE created_at >= datetime('now', '-30 days')`),
-      db.execute(`SELECT COUNT(*) as n FROM page_views WHERE date(created_at) = date('now')`),
-      db.execute(`SELECT COUNT(DISTINCT ip) as n FROM page_views WHERE created_at >= datetime('now', '-30 days')`),
+      db.execute(`SELECT COUNT(*) as n FROM page_views WHERE created_at >= datetime('now', '-30 days') AND ${HUMAN_VIEW_SQL}`),
+      db.execute(`SELECT COUNT(*) as n FROM page_views WHERE date(created_at) = date('now') AND ${HUMAN_VIEW_SQL}`),
+      db.execute(`SELECT COUNT(DISTINCT ip) as n FROM page_views WHERE created_at >= datetime('now', '-30 days') AND ${HUMAN_VIEW_SQL}`),
       db.execute(`SELECT COUNT(*) as n FROM quotes`),
       db.execute(`SELECT COUNT(*) as n FROM quotes WHERE created_at >= datetime('now', '-7 days')`),
       db.execute(`
         SELECT date(created_at) as day, COUNT(*) as views
         FROM page_views
         WHERE created_at >= datetime('now', '-30 days')
+          AND ${HUMAN_VIEW_SQL}
         GROUP BY day ORDER BY day
       `),
       db.execute(`
@@ -416,6 +444,7 @@ app.get('/api/admin/stats', requireAuth, async (_req, res) => {
           AND referrer NOT LIKE '%firstlightclean%'
           AND referrer NOT LIKE '%localhost%'
           AND created_at >= datetime('now', '-30 days')
+          AND ${HUMAN_VIEW_SQL}
         GROUP BY referrer ORDER BY count DESC LIMIT 8
       `),
       db.execute(`

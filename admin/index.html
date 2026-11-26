@@ -443,6 +443,7 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
     const data = await r.json();
     if (r.ok && data.token) {
       localStorage.setItem(TOKEN_KEY, data.token);
+      localStorage.setItem('fl_owner_device', '1'); // stop counting this browser's site visits
       showApp();
     } else {
       errEl.textContent = data.error || 'Incorrect password.';

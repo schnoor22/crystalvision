@@ -63,6 +63,13 @@ export async function loadContent() {
 // ─── Track page view ─────────────────────────────────────────
 
 export function trackPageView() {
+  // Skip automated browsers, and browsers that have logged in to /admin
+  // (Tommy and Kyle checking the site shouldn't count as visitors).
+  try {
+    if (navigator.webdriver) return;
+    if (localStorage.getItem('fl_owner_device') || localStorage.getItem('cv_admin_token')) return;
+  } catch { /* storage blocked — track normally */ }
+
   // Fire-and-forget — don't block page load
   const payload = JSON.stringify({
     referrer:  document.referrer || '',
