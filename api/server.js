@@ -359,6 +359,7 @@ app.get('/api/admin/stats', requireAuth, async (_req, res) => {
         FROM page_views
         WHERE referrer != ''
           AND referrer NOT LIKE '%crystalvision%'
+          AND referrer NOT LIKE '%firstlightclean%'
           AND referrer NOT LIKE '%localhost%'
           AND created_at >= datetime('now', '-30 days')
         GROUP BY referrer ORDER BY count DESC LIMIT 8
