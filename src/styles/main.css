@@ -888,6 +888,64 @@ html.intro #animation-overlay.playing { animation: none; }
   box-shadow: 0 0 0 3px rgba(63, 130, 199, 0.15);
 }
 
+/* Quote form photo picker */
+.photo-picker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 3rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-wave-500);
+  background: var(--color-slate-50);
+  border: 1.5px dashed var(--color-slate-300);
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.photo-picker i { font-size: 1.25rem; }
+.photo-picker:hover,
+.photo-picker:has(+ #quote-photos:focus-visible) {
+  border-color: var(--color-wave-400);
+  background: #fff;
+}
+.photo-picker.is-full { opacity: 0.5; pointer-events: none; }
+.photo-list {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+.photo-list:empty { display: none; }
+.photo-thumb {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background: var(--color-slate-100);
+}
+.photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.photo-thumb.is-busy img { opacity: 0.4; }
+.photo-remove {
+  position: absolute;
+  top: 0.2rem;
+  right: 0.2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border: none;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.75);
+  color: #fff;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.photo-note { font-size: 0.8125rem; color: var(--color-slate-500); }
+.photo-note.is-error { color: #dc2626; }
+
 .form-submit {
   display: flex;
   align-items: center;

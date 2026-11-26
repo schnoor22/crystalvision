@@ -837,6 +837,7 @@ function renderQuotesTable(quotes) {
       ${q.message ? `<p class="text-sm text-slate-300 mt-2 whitespace-pre-line break-words">${escHtml(q.message)}</p>` : ''}
       ${q.address ? `<p class="text-xs text-slate-400 mt-2 break-words"><span class="text-slate-500">Address:</span> ${escHtml(q.address)}</p>` : ''}
       ${q.source ? `<p class="text-xs text-slate-400 mt-1"><span class="text-slate-500">Heard via:</span> ${escHtml(q.source)}</p>` : ''}
+      ${quotePhotosHtml(q, 'grid grid-cols-4 gap-2 mt-3', 'w-full aspect-square')}
       <div class="grid grid-cols-2 gap-2 mt-3">
         <a href="tel:${escAttr(q.phone)}" class="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-wave-400 text-deep-950 font-semibold text-sm">Call</a>
         <a href="sms:${escAttr(q.phone)}" class="flex items-center justify-center gap-2 py-2.5 rounded-xl border border-slate-600 text-slate-200 font-medium text-sm">Text</a>
@@ -853,11 +854,22 @@ function renderQuotesTable(quotes) {
       <td class="px-5 py-3.5 text-slate-400 hidden lg:table-cell text-xs">${escHtml(q.address || '—')}</td>
       <td class="px-5 py-3.5 text-slate-400 hidden md:table-cell max-w-xs">
         <span class="line-clamp-2 block text-xs" title="${escAttr(q.message)}">${escHtml(q.message || '—')}</span>
+        ${quotePhotosHtml(q, 'flex flex-wrap gap-1.5 mt-2', 'w-12 h-12')}
       </td>
       <td class="px-5 py-3.5 text-slate-400 hidden xl:table-cell text-xs">${escHtml(q.source || '—')}</td>
       <td class="px-5 py-3.5 text-slate-500 text-xs text-right whitespace-nowrap">${formatDate(q.created_at)}</td>
     </tr>
   `).join('');
+}
+
+// Customer photos attached to a quote (Vercel Blob URLs), opened full size in a new tab
+function quotePhotosHtml(q, wrapClass, imgClass) {
+  const photos = (Array.isArray(q.photos) ? q.photos : []).filter((u) => /^https:\/\//.test(u));
+  if (!photos.length) return '';
+  return `<div class="${wrapClass}">${photos.map((u, i) => `
+    <a href="${escAttr(u)}" target="_blank" rel="noopener" class="block">
+      <img src="${escAttr(u)}" alt="Photo ${i + 1} from ${escAttr(q.name)}" loading="lazy" class="${imgClass} object-cover rounded-lg border border-slate-700/60" />
+    </a>`).join('')}</div>`;
 }
 
 document.getElementById('quotes-search').addEventListener('input', (e) => {

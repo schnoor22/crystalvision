@@ -96,6 +96,7 @@ const dbMigrations = dbReady.then(() => Promise.all([
   db.execute('ALTER TABLE quotes ADD COLUMN address TEXT DEFAULT ""').catch(() => {}),
   db.execute('ALTER TABLE quotes ADD COLUMN source  TEXT DEFAULT ""').catch(() => {}),
   db.execute('ALTER TABLE portfolio ADD COLUMN featured INTEGER DEFAULT 0').catch(() => {}),
+  db.execute("ALTER TABLE quotes ADD COLUMN photos TEXT DEFAULT '[]'").catch(() => {}),
 ])).catch(err => console.error('DB migration error:', err));
 
 // ─── Content (stored in Turso settings table) ─────────────────
@@ -128,6 +129,39 @@ const upload = multer({
     else cb(new Error('Images only (jpeg, png, webp, gif)'));
   },
 });
+
+// Customer photos on the quote form. The browser shrinks each photo to a
+// ~1600px JPEG before sending, so these caps are a safety net. Keep the
+// total under Vercel's 4.5 MB request body limit.
+const QUOTE_MAX_PHOTOS     = 5;
+const QUOTE_MAX_PHOTO_SIZE = 2 * 1024 * 1024;
+const QUOTE_MAX_TOTAL_SIZE = 4 * 1024 * 1024;
+
+const quoteUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: QUOTE_MAX_PHOTO_SIZE, files: QUOTE_MAX_PHOTOS, fields: 20, fieldSize: 10 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (/^image\/(jpeg|png|webp|heic|heif)$/.test(file.mimetype)) cb(null, true);
+    else cb(Object.assign(new Error('Photos must be JPEG, PNG, WebP or HEIC.'), { status: 400 }));
+  },
+});
+
+// Wraps multer so a bad upload returns a friendly JSON error instead of a 500.
+// JSON requests (no photos) pass straight through.
+function quotePhotos(req, res, next) {
+  quoteUpload.array('photos', QUOTE_MAX_PHOTOS)(req, res, (err) => {
+    if (err) {
+      let msg = err.message || 'Photo upload failed.';
+      if (err.code === 'LIMIT_FILE_SIZE')  msg = 'One of the photos is too large (2 MB max each).';
+      if (err.code === 'LIMIT_FILE_COUNT' || err.code === 'LIMIT_UNEXPECTED_FILE') msg = `Please attach up to ${QUOTE_MAX_PHOTOS} photos.`;
+      return res.status(err.code === 'LIMIT_FILE_SIZE' ? 413 : 400).json({ error: msg });
+    }
+    const total = (req.files || []).reduce((n, f) => n + f.size, 0);
+    if (total > QUOTE_MAX_TOTAL_SIZE)
+      return res.status(413).json({ error: 'Photos are too large in total. Try fewer photos.' });
+    next();
+  });
+}
 
 const heroUpload = multer({
   storage: multer.memoryStorage(),
@@ -266,10 +300,10 @@ app.post('/api/track', trackLimiter, async (req, res) => {
   }
 });
 
-app.post('/api/quote', quoteLimiter, async (req, res) => {
+app.post('/api/quote', quoteLimiter, quotePhotos, async (req, res) => {
   try {
     await dbMigrations;
-    const { name, phone, message, address, source } = req.body;
+    const { name, phone, message, address, source } = req.body || {};
 
     if (!name || typeof name !== 'string' || !name.trim())
       return res.status(400).json({ error: 'Name is required.' });
@@ -283,17 +317,36 @@ app.post('/api/quote', quoteLimiter, async (req, res) => {
     const cleanSource  = (source  || '').trim().substring(0, 100);
     const ip           = (req.headers['x-forwarded-for'] || req.ip || '').split(',')[0].trim();
 
+    // Photos: keep a copy in Vercel Blob (so they show in /admin) and attach
+    // them to the email. If Blob is unavailable the email still carries them.
+    const photos = (req.files || []).map((f, i) => {
+      const ext = { 'image/png': 'png', 'image/webp': 'webp', 'image/heic': 'heic', 'image/heif': 'heif' }[f.mimetype] || 'jpg';
+      return { buffer: f.buffer, contentType: f.mimetype, filename: `photo-${i + 1}.${ext}` };
+    });
+    const photoUrls = [];
+    if (photos.length && process.env.BLOB_READ_WRITE_TOKEN) {
+      const stamp = Date.now();
+      const results = await Promise.allSettled(photos.map(p =>
+        put(`quotes/${stamp}-${crypto.randomBytes(8).toString('hex')}-${p.filename}`, p.buffer, { access: 'public', contentType: p.contentType })
+      ));
+      results.forEach(r => {
+        if (r.status === 'fulfilled') photoUrls.push(r.value.url);
+        else console.error('Quote photo upload failed:', r.reason?.message);
+      });
+    }
+
     const result = await db.execute({
-      sql:  'INSERT INTO quotes (name, phone, message, address, source, ip) VALUES (?, ?, ?, ?, ?, ?)',
-      args: [cleanName, cleanPhone, cleanMessage, cleanAddress, cleanSource, ip],
+      sql:  'INSERT INTO quotes (name, phone, message, address, source, ip, photos) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      args: [cleanName, cleanPhone, cleanMessage, cleanAddress, cleanSource, ip, JSON.stringify(photoUrls)],
     });
 
     if (RESEND_API_KEY) {
-      sendEmailNotification(cleanName, cleanPhone, cleanMessage, cleanAddress, cleanSource).catch(e =>
+      // Awaited so the serverless function isn't frozen before the email goes out.
+      await sendEmailNotification(cleanName, cleanPhone, cleanMessage, cleanAddress, cleanSource, photos, photoUrls).catch(e =>
         console.error('Email failed:', e.message)
       );
     } else {
-      console.log(`[QUOTE] ${cleanName} (${cleanPhone}): ${cleanMessage || '(no message)'}`);
+      console.log(`[QUOTE] ${cleanName} (${cleanPhone}): ${cleanMessage || '(no message)'}${photos.length ? ` [${photos.length} photo(s)]` : ''}`);
     }
 
     res.json({ success: true, message: "Quote request received! We'll be in touch shortly.", id: Number(result.lastInsertRowid) });
@@ -421,10 +474,14 @@ app.get('/api/admin/quotes', requireAuth, async (_req, res) => {
   try {
     await dbReady;
     const result = await db.execute(`
-      SELECT id, name, phone, message, address, source, created_at
+      SELECT id, name, phone, message, address, source, photos, created_at
       FROM quotes ORDER BY created_at DESC LIMIT 200
     `);
-    res.json(result.rows);
+    res.json(result.rows.map(r => {
+      let photos = [];
+      try { photos = JSON.parse(r.photos || '[]'); } catch { /* ignore */ }
+      return { ...r, photos: Array.isArray(photos) ? photos : [] };
+    }));
   } catch (err) {
     console.error('Quotes error:', err);
     res.status(500).json({ error: 'Failed to load quotes.' });
@@ -579,14 +636,15 @@ app.delete('/api/admin/hero-image', requireAuth, async (_req, res) => {
 
 // ─── Email ───────────────────────────────────────────────────
 
-async function sendEmailNotification(name, phone, message, address, source) {
+async function sendEmailNotification(name, phone, message, address, source, photos = [], photoUrls = []) {
   const { Resend } = require('resend');
   const resend = new Resend(RESEND_API_KEY);
   await resend.emails.send({
     // Sender domain must be verified in Resend. Set EMAIL_FROM once the new domain is set up.
     from: process.env.EMAIL_FROM || 'First Light Window Cleaning <quotes@crystalvisionusa.com>',
     to: [OWNER_EMAIL],
-    subject: `New Quote Request from ${name}`,
+    subject: `New Quote Request from ${name}${photos.length ? ` (${photos.length} photo${photos.length > 1 ? 's' : ''})` : ''}`,
+    attachments: photos.map(p => ({ filename: p.filename, content: p.buffer })),
     html: `
       <div style="font-family:Arial,sans-serif;max-width:600px">
         <h2 style="color:#17171B">New Quote Request</h2>
@@ -596,7 +654,9 @@ async function sendEmailNotification(name, phone, message, address, source) {
           ${address ? `<tr><td style="padding:8px 0;font-weight:bold;color:#475569">Address:</td><td>${esc(address)}</td></tr>` : ''}
           ${message ? `<tr><td style="padding:8px 0;font-weight:bold;color:#475569;vertical-align:top">Message:</td><td>${esc(message)}</td></tr>` : ''}
           ${source ? `<tr><td style="padding:8px 0;font-weight:bold;color:#475569">Heard via:</td><td>${esc(source)}</td></tr>` : ''}
+          ${photos.length ? `<tr><td style="padding:8px 0;font-weight:bold;color:#475569">Photos:</td><td>${photos.length} attached</td></tr>` : ''}
         </table>
+        ${photoUrls.length ? `<div style="margin-top:12px">${photoUrls.map(u => `<a href="${esc(u)}"><img src="${esc(u)}" alt="Customer photo" width="180" style="width:180px;max-width:48%;height:auto;border-radius:6px;margin:0 6px 6px 0;border:1px solid #e2e8f0"/></a>`).join('')}</div>` : ''}
         <hr style="border:1px solid #e2e8f0;margin:20px 0"/>
         <p style="color:#94a3b8;font-size:12px">Submitted ${new Date().toLocaleString('en-US', { timeZone: 'Pacific/Honolulu' })} HST</p>
       </div>`,

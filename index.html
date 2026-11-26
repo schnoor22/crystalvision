@@ -435,6 +435,16 @@
             <input id="quote-address" name="address" type="text" placeholder="123 Main St, City" class="form-input" />
           </div>
           <div class="form-field">
+            <span class="form-label">Photos <span class="text-slate-400 font-normal">(optional, up to 5)</span></span>
+            <label for="quote-photos" class="photo-picker">
+              <i class="ph ph-camera"></i>
+              <span>Add photos of your windows</span>
+            </label>
+            <input id="quote-photos" name="photos" type="file" accept="image/*" multiple class="sr-only" />
+            <div id="quote-photo-list" class="photo-list" aria-live="polite"></div>
+            <p id="quote-photo-note" class="photo-note" hidden></p>
+          </div>
+          <div class="form-field">
             <label for="quote-source" class="form-label">How did you hear about us? <span class="text-slate-400 font-normal">(optional)</span></label>
             <select id="quote-source" name="source" class="form-input">
               <option value="">Select an option...</option>
