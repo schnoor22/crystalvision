@@ -189,6 +189,11 @@ function getDefaultContent() {
       instagramUrl: 'https://www.instagram.com/crystalvisionusa/',
       payInvoiceUrl: 'https://venmo.com/u/Kidschmid',
     },
+    // 'auto' follows the calendar, 'off' hides holiday touches, or a theme id
+    // from src/js/holiday-themes.js keeps that theme on.
+    holiday: {
+      mode: 'auto',
+    },
   };
 }
 

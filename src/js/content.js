@@ -46,18 +46,22 @@ export async function loadContent() {
     const cached = JSON.parse(sessionStorage.getItem(CONTENT_CACHE_KEY) || 'null');
     if (cached?.data && Date.now() - cached.ts < CONTENT_CACHE_TTL) {
       applyContent(cached.data);
-      return;
+      return cached.data;
     }
   } catch { /* ignore */ }
 
   // 2. Fetch fresh content from API
   try {
     const res = await fetch('/api/content');
-    if (!res.ok) return;
+    if (!res.ok) return null;
     const data = await res.json();
     applyContent(data);
-    sessionStorage.setItem(CONTENT_CACHE_KEY, JSON.stringify({ data, ts: Date.now() }));
+    try {
+      sessionStorage.setItem(CONTENT_CACHE_KEY, JSON.stringify({ data, ts: Date.now() }));
+    } catch { /* storage full or blocked */ }
+    return data;
   } catch { /* network error — keep defaults */ }
+  return null;
 }
 
 // ─── Track page view ─────────────────────────────────────────

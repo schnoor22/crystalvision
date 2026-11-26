@@ -1,0 +1,100 @@
+/* ─────────────────────────────────────────────────────────
+   Holiday themes
+   Deliberately light: a greeting pill, a tint on a few thin
+   accent lines, and a sparse particle layer in the hero.
+   The colours come from --holiday-a/b/c, which holidays.js
+   sets on <html> together with data-holiday="<id>".
+   ───────────────────────────────────────────────────────── */
+
+/* Greeting pill above the hero heading */
+.holiday-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 1rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(14, 14, 17, 0.38);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border: 1px solid color-mix(in srgb, var(--holiday-a) 50%, transparent);
+  border-radius: 9999px;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  animation: holiday-in 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.holiday-pill i {
+  font-size: 0.9375rem;
+  color: var(--holiday-a);
+}
+
+@keyframes holiday-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Particle layer: above the photo and its overlay, below the text */
+.holiday-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  pointer-events: none;
+  animation: holiday-fade 1.6s ease both;
+}
+
+@keyframes holiday-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* A faint wash of the holiday colour at the top of the hero */
+html[data-holiday] .hero-overlay {
+  background:
+    radial-gradient(ellipse 65% 38% at 50% 0%, color-mix(in srgb, var(--holiday-a) 16%, transparent), transparent 72%),
+    linear-gradient(
+      to bottom,
+      rgba(14, 14, 17, 0.75) 0%,
+      rgba(14, 14, 17, 0.45) 40%,
+      rgba(14, 14, 17, 0.55) 70%,
+      rgba(14, 14, 17, 0.8) 100%
+    );
+}
+
+/* Thin line under the scrolled nav */
+html[data-holiday] .site-nav::after {
+  background: linear-gradient(90deg, transparent 0%, var(--holiday-a) 25%, var(--holiday-b) 50%, var(--holiday-c) 75%, transparent 100%);
+}
+
+html[data-holiday] .site-nav.scrolled::after { opacity: 0.75; }
+
+/* Top edge of the service cards on hover */
+html[data-holiday] .service-card::before {
+  background: linear-gradient(90deg, var(--holiday-a), var(--holiday-b), var(--holiday-c));
+}
+
+/* Side glow in the bottom call-to-action */
+html[data-holiday] .cta-banner::before {
+  background: radial-gradient(ellipse, color-mix(in srgb, var(--holiday-a) 16%, transparent), transparent 70%);
+}
+
+/* Small greeting above the copyright line */
+.holiday-footer-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 0.875rem;
+  font-size: 0.8125rem;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.holiday-footer-note i { color: var(--holiday-a); }
+
+@media (prefers-reduced-motion: reduce) {
+  .holiday-pill, .holiday-canvas { animation: none; }
+}

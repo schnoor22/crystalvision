@@ -10,6 +10,7 @@ import { loadContent, trackPageView } from './js/content.js';
 import { shouldPlayAnimation, initAnimation } from './js/animation.js';
 import { initModals } from './js/modals.js';
 import { initForm } from './js/form.js';
+import { initHoliday, setHolidaySetting } from './js/holidays.js';
 
 // ─── Boot ───────────────────────────────────────────────────
 
@@ -18,8 +19,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const yearEl = document.getElementById('current-year');
   if (yearEl) yearEl.textContent = new Date().getFullYear();
 
+  // Holiday theme: best guess now, corrected once the admin setting arrives
+  initHoliday();
+
   // Load editable content from API (cache-first, no flash)
-  loadContent();
+  loadContent().then((content) => {
+    if (content) setHolidaySetting(content.holiday);
+  });
 
   // Track page view
   trackPageView();
