@@ -1,7 +1,7 @@
 {
-  "name": "crystalvision-api",
+  "name": "firstlight-api",
   "version": "1.0.0",
-  "description": "Crystal Vision Co. API — quote form + payments",
+  "description": "First Light Window Cleaning API — content, quotes, gallery",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
